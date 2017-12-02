@@ -1,0 +1,84 @@
+AddDefaultCharset UTF-8
+ErrorDocument 404 /page/404
+ErrorDocument 401 /password.php
+RewriteEngine on
+
+Redirect 301 /ru/contacts/ /page/kontakty
+Redirect 301 /ru/pages/39/ /page/o-magazine
+Redirect 301 /ru/pages/222/ /catalog/aktsii
+Redirect 301 /ru/pages/183/ /news
+
+RewriteRule ^ru/products/141/?([^/]+)?$ /catalog/zhenskoe [L,R=301]
+RewriteRule ^ru/products/142/?([^/]+)?$ /catalog/muzhskoe [L,R=301]
+RewriteRule ^ru/products/258/?([^/]+)?$ /catalog/kozhanye-kurtki_2 [L,R=301]
+RewriteRule ^ru/products/254/?([^/]+)?$ /catalog/dublenki_2 [L,R=301]
+RewriteRule ^ru/products/257/?([^/]+)?$ /catalog/kozhanye-kurtki [L,R=301]
+RewriteRule ^ru/products/237/?([^/]+)?$ /catalog/dublenki [L,R=301]
+RewriteRule ^ru/products/274/?([^/]+)?$ /catalog/mehovye-zhilety [L,R=301]
+RewriteRule ^ru/products/270/?([^/]+)?$ /catalog/remni_2 [L,R=301]
+RewriteRule ^ru/products/277/?([^/]+)?$ /catalog/remni [L,R=301]
+RewriteRule ^ru/products/282/?([^/]+)?$ /catalog/sumki [L,R=301]
+RewriteRule ^ru/products/271/?([^/]+)?$ /catalog/sumki_2 [L,R=301]
+RewriteRule ^ru/products/272/?([^/]+)?$ /catalog/shapki_2 [L,R=301]
+RewriteRule ^ru/products/278/?([^/]+)?$ /catalog/shapki [L,R=301]
+RewriteRule ^ru/products/279/?([^/]+)?$ /catalog/perchatki_2 [L,R=301]
+RewriteRule ^ru/products/280/?([^/]+)?$ /catalog/perchatki [L,R=301]
+RewriteRule ^ru/products/286/?([^/]+)?$ /catalog/koshelki [L,R=301]
+RewriteRule ^ru/products/289/?([^/]+)?$ /catalog/portmone [L,R=301]
+RewriteRule ^ru/products/287/?([^/]+)?$ /catalog/kosmetichki [L,R=301]
+RewriteRule ^ru/products/288/?([^/]+)?$ /catalog/klyuchnitsy [L,R=301]
+RewriteRule ^ru/products/290/?([^/]+)?$ /catalog/vizitnitsy [L,R=301]
+RewriteRule ^ru/products/291/?([^/]+)?$ /catalog/oblozhki-dlya-dokumentov [L,R=301]
+RewriteRule ^ru/products/394/?([^/]+)?$ /catalog/amulety-v-koshelki [L,R=301]
+RewriteRule ^ru/products/393/?([^/]+)?$ /catalog/braslety [L,R=301]
+RewriteRule ^ru/products/396/?([^/]+)?$ /catalog/braslety [L,R=301]
+RewriteRule ^ru/products/404/?([^/]+)?$ /catalog/sharfy_2 [L,R=301]
+RewriteRule ^ru/products/405/?([^/]+)?$ /catalog/sharfy [L,R=301]
+RewriteRule ^ru/products/269/?([^/]+)?$ /products/ [L,R=301]
+
+# Админка теперь по адресу /engine
+RewriteRule	^admin/?$  engine [L]
+
+# Каталог товаров
+RewriteRule ^([a-z]{2})/catalog/([^/]+)/?$	index.php?module=ProductsView&lang=$1&category=$2 [L,QSA]
+RewriteRule ^catalog/([^/]+)/?$	index.php?module=ProductsView&category=$1 [L,QSA]
+
+# Товары
+RewriteRule ^([a-z]{2})/products/([^/]+)/?$	index.php?module=ProductView&lang=$1&product_url=$2 [L,QSA]
+RewriteRule ^products/([^/]+)/?$	index.php?module=ProductView&product_url=$1 [L,QSA]
+RewriteRule ^([a-z]{2})?/?products/?$	index.php?module=ProductsView&lang=$1 [L,QSA]
+
+# Корзина и заказы
+RewriteRule ^cart/?$	index.php?module=CartView   [L,QSA]
+RewriteRule ^cart/([^/]+)/?$	index.php?module=CartView&add_variant=$1  [L,QSA]
+RewriteRule ^cart/remove/([^/]+)/([^/]+)/?$	index.php?module=CartView&delete_variant=$1&delete_v_item=$2  [L,QSA]
+RewriteRule ^cart/remove/([^/]+)/?$	index.php?module=CartView&delete_variant=$1  [L,QSA]
+RewriteRule ^order/([^/]+)/?$	index.php?module=OrderView&url=$1  [L,QSA]
+RewriteRule ^order/?$	index.php?module=OrderView  [L,QSA]
+
+# Google sitemap
+RewriteRule ^sitemap.xml?$	sitemap.php  [L,QSA]
+
+# Блог
+RewriteRule ^news/([^/]+)/?$	index.php?module=NewsView&url=$1 [L,QSA]
+RewriteRule ^news/?$			index.php?module=NewsView [L,QSA]
+
+# feedback
+RewriteRule ^([a-z]{2})/contact/?$	index.php?module=FeedbackView&lang=$1 [L,QSA]
+RewriteRule ^contact/?$	index.php?module=FeedbackView [L,QSA]
+
+# Статические страницы
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^([a-z]{2})/page/([^/]+)/?$	index.php?module=PageView&lang=$1&page_url=$2 [L,QSA]
+RewriteRule ^page/([^/]+)/?$	index.php?module=PageView&page_url=$1 [L,QSA]
+RewriteRule ^([a-z]{2})?/?$	index.php?module=MainView&lang=$1&page_url= [L,QSA]
+
+
+# Ресайз картинок на лету
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^files/products/(.+) resize/resize.php?file=$1&token=%{QUERY_STRING}
+#RewriteCond %{THE_REQUEST} ^GET\ (.*)files/products/(.*)\?([A-z0-9]*) 
+#RewriteRule ^files/products/(.+) resize/resize.php?file=%2&token=%3 [L,NE]

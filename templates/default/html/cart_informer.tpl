@@ -1,0 +1,1 @@
+{if $cart->total_products>0}<a class="cart-informer" href="./cart/"><span>{$cart->total_products}</span></a>{else}<div class="cart-informer"></div>{/if}
