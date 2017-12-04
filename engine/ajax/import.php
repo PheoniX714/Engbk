@@ -308,16 +308,27 @@ class ImportAjax extends Engine
 				$group_code = trim($item['group_id']);
 				
 				$group = $this->products->get_group($group_code);
+				$this->db->query('DELETE FROM __products_groups_items WHERE product_id=?', $product_id);
+				
 				// Если группа существует
-				if($group->id){
-					$this->db->query('DELETE FROM __products_groups_items WHERE product_id=? AND group_id=?', $product_id, $group->id);
+				if($group->id){					
+					$group_p = $this->products->get_group_products($group->id);
+					$group_products = array();
+					foreach($group_p  as $gp){
+						$group_products[] = $gp->product_id;
+					}
+					$group_products[] = $product_id;
 					
-					$pos = max(0 ,count($this->products->get_group_products($group->id))-1);
-					$this->products->add_group_product($product_id, $group->id, $pos);
+					$this->products->delete_group_products($group->id);
+					if(is_array($group_products))
+					{
+						$pos = 0;
+						foreach($group_products  as $i=>$group_product){
+							$this->products->add_group_product($group_product, $group->id, $pos++);
+						}
+					}
 				}else{
 					$group_id = $this->products->add_group(array('group_code'=>$group_code, 'visible'=>1));
-					
-					$this->db->query('DELETE FROM __products_groups_items WHERE product_id=?', $product_id);
 					if(!empty($group_id))
 						$this->products->add_group_product($product_id, $group_id);
 				}
@@ -360,8 +371,6 @@ class ImportAjax extends Engine
 						$translation->visible_name = $item[$col_translated_name];
 					}
 					
-					
-					
 					if(empty($translation->product_id))
 						$translation->product_id = $product_id;
 					
@@ -394,7 +403,7 @@ class ImportAjax extends Engine
 					}
 					
 	 			}
-	 		} 	
+	 		}
  		return $imported_item;
 	 	}	
 	}
