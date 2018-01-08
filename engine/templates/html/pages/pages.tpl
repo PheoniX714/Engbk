@@ -54,7 +54,7 @@
 					  <span class="text"><a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}">{$page->name|escape}</a></span>
 					  <!-- General tools such as edit or delete-->
 					  <div class="tools">
-						<a href="../{$page->url}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
+						<a href="../{$page->pre_url}{$page->url}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
 						<a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-edit"></i></a>
 						<button class="btn btn-sm {if !$page->visible}btn-default{else}btn-success enbl{/if} enable btn-flat" title="Активна"><i class="fa fa-lightbulb-o"></i></button>
 						<button class="btn btn-sm btn-danger l-delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>

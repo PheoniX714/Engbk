@@ -371,6 +371,8 @@ class ImportAjax extends Engine
 						$translation->visible_name = $item[$col_translated_name];
 					}
 					
+					
+					
 					if(empty($translation->product_id))
 						$translation->product_id = $product_id;
 					
@@ -403,7 +405,7 @@ class ImportAjax extends Engine
 					}
 					
 	 			}
-	 		}
+	 		} 	
  		return $imported_item;
 	 	}	
 	}

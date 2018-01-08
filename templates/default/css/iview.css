@@ -60,7 +60,7 @@
 #iview .iview-controlNav {
 	position:absolute;
 	z-index:9;
-	bottom:30px;
+	bottom:15px;
 	height:20px;
 	width:100%;
 }
@@ -87,15 +87,15 @@
 #iview .iview-controlNav .iview-items ul li{
 	display: inline-block;
 	position: relative;
-	width: 18px;
-    height: 18px;
-	margin:0 10px;
+	width: 15px;
+    height: 15px;
+	margin:0 5px;
 }
 #iview .iview-controlNav .iview-items ul li a{
 	display: inline-block;
 	position: relative;
-	width: 15px;
-    height: 15px;
+	width: 12px;
+    height: 12px;
 	border-radius:10px;
 	text-indent:-9999px;
 	background:transparent;

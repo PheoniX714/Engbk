@@ -108,12 +108,13 @@ class OrderView extends View
 		}
 			
 		// Варианты оплаты
-		/* $payment_methods = $this->payment->get_payment_methods(array('delivery_id'=>$order->delivery_id, 'enabled'=>1)); */
+		$payment_methods = $this->payment->get_payment_methods(array('enabled'=>1));
 		$this->templates->assign('payment_methods', $payment_methods);
 
 		// Все валюты
 		$this->templates->assign('all_currencies', $this->money->get_currencies());
-
+		
+		#print_r($_SESSION);
 		
 		
 		// Выводим заказ

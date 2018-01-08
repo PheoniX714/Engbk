@@ -20,6 +20,7 @@ class IndexAdmin extends Engine
 		'ManagersAdmin'       		=> 'managers',
 		'ManagerAdmin'        		=> 'managers',
 		// Классы дополнений установленых в CMS
+		'PaymentMethodAdmin'       	=> 'settings',
 		'ProductsImportAdmin'       => 'products',
 		'ProductsGroupsAdmin'       => 'products',
 		'ProductsGroupAdmin'        => 'products',

@@ -56,17 +56,17 @@
 		</div>
 		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 			<div class="main-banner">
-				<a href="/page/podarochnyj-sertifikat"><img src="templates/{$settings->theme|escape}/img/main2.jpg"></a>
+				<a href="/catalog/zhenskoe"><img src="templates/{$settings->theme|escape}/img/main2.jpg"></a>
 			</div>
 		</div>
 		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 			<div class="main-banner">
-				<a href="/catalog/dublenki"><img src="templates/{$settings->theme|escape}/img/main3.jpg"></a>
+				<a href="/catalog/muzhskoe"><img src="templates/{$settings->theme|escape}/img/main3.jpg"></a>
 			</div>
 		</div>
 		<div class="col-lg-12 col-xs-12">
 			<div class="main-banner">
-				<a href="/catalog/sharfy"><img src="templates/{$settings->theme|escape}/img/main4.jpg"></a>
+				<a href="/page/podarochnyj-sertifikat"><img src="templates/{$settings->theme|escape}/img/main4.jpg"></a>
 			</div>
 		</div>
 	</div>

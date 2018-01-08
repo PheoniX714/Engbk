@@ -1,5 +1,5 @@
 <?php
-$version = "9.12.0";
+$version = "9.12.1";
 if (session_id() == '') session_start();
 
 mb_internal_encoding('UTF-8');
@@ -65,8 +65,8 @@ $config = array(
 	| without final / (DON'T TOUCH)
 	|
 	*/
-	'base_url' => ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && ! in_array(strtolower($_SERVER['HTTPS']), array( 'off', 'no' ))) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'],
-
+	'base_url' => ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https" : "http"). "://". @$_SERVER['HTTP_HOST'],
+	
 	/*
 	|--------------------------------------------------------------------------
 	| path from base_url to base of upload folder
@@ -113,18 +113,23 @@ $config = array(
 	'ftp_pass'         => "pass",
 	'ftp_base_folder'  => "base_folder",
 	'ftp_base_url'     => "http://site to ftp root",
-	/* --------------------------------------------------------------------------
-	| path from ftp_base_folder to base of thumbs folder with start and final |
-	|--------------------------------------------------------------------------*/
+	'ftp_temp_folder'  => "../temp/",
+	/*
+	|---------------------------------------------------------------------------
+	| path from ftp_base_folder to base of thumbs folder with start and final /
+	|---------------------------------------------------------------------------
+	*/
 	'ftp_thumbs_dir' => '/thumbs/',
 	'ftp_ssl' => false,
 	'ftp_port' => 21,
 
-
-	// 'ftp_host'         => "s108707.gridserver.com",
-	// 'ftp_user'         => "test@responsivefilemanager.com",
-	// 'ftp_pass'         => "Test.1234",
-	// 'ftp_base_folder'  => "/domains/responsivefilemanager.com/html",
+	/* EXAMPLE
+	'ftp_host'         => "host.com",
+	'ftp_user'         => "test@host.com",
+	'ftp_pass'         => "pass.1",
+	'ftp_base_folder'  => "",
+	'ftp_base_url'     => "http://host.com/testFTP",
+	*/
 
 
 	/*
@@ -167,7 +172,7 @@ $config = array(
 	| in Megabytes
 	|
 	*/
-	'MaxSizeUpload' => 100,
+	'MaxSizeUpload' => 10000,
 
 	/*
 	|--------------------------------------------------------------------------

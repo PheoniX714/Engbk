@@ -14,7 +14,7 @@
 ' scope=parent}
 
 <section class="content-header">
-	<h1>{if $order->id}Заказ №{$order->id|escape}{else}Новый заказ{/if}</h1>
+	<h1>{if $order->id}Заказ №{$order->id|escape}{else}Новый заказ{/if} {$order->name|escape} {if $order->paid}(<span class="text-green"><b>Оплачен</b></span>){/if}</h1>
 	<ol class="breadcrumb">
 		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
 		<li><a href="./index.php?module=OrdersAdmin"> Заказы</a></li>

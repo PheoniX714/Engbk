@@ -22,11 +22,11 @@
 </section>
 
 <section class="content">
-<form id="list_form" method="post">
 <!-- Main row -->
   <div class="row">
 	<!-- Left col -->
-	<div class="col-md-12">
+	<form id="list_form" method="post">
+	<div class="col-md-10">
 	  <div class="box box-success"> 
 		<div class="box-header">
 		  <i class="fa fa-th-list"></i>
@@ -44,7 +44,7 @@
 						<input type="checkbox" class="minimal checkbox-toggle">
 					</th>
 					<th class="id-cell">ID</th>
-					<th class="sku-cell">Артикул</th>
+					<!-- <th class="sku-cell">Артикул</th> -->
 					<th>Товар</th>
 					<th>Цена</th>
 					<th class="actions-cell">Действия</th>
@@ -62,9 +62,9 @@
 					<td class="id-cell">
 						{$product->id|escape}
 					</td>
-					<td class="sku-cell">
+					<!-- <td class="sku-cell">
 						{$product->sku|escape}
-					</td>
+					</td> -->
 					<td class="product-cell">
 						{$image = $product->images|@first}
 						{if $image}
@@ -123,215 +123,70 @@
 		</div>
 		  
 		<div class="col-lg-2">
-			<button type="submit" class="btn btn-block btn-success btn-flat"value="Применить">Применить</button>
+			<button type="submit" class="btn btn-block btn-success btn-flat" value="Применить">Применить</button>
 		</div>
 	  </div>
 	</div>
-	<!-- /.col -->
+	</form>
+	<div class="col-md-2">
+		<div class="row">
+		<form method="get">
+			<input type="hidden" name="module" value="ProductsAdmin">
+			<div class="col-md-12" id="search">
+				<label>Поиск</label>
+				<div class="form-group">
+					<div class="input-group">
+						<input class="form-control" id="appendedInputButton" name="keyword" type="text" value="{$keyword|escape}">
+						<span class="input-group-btn">
+							<button class="btn btn-success btn-flat" type="submit" value=""><i class="fa fa-search"></i></button>
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-12">
+				<!-- Меню каталога -->
+				<div id="catalog_menu" style="margin-bottom:20px;">
+				{* Рекурсивная функция вывода дерева категорий *}
+				{if $categories}
+				<label>Фильтр по категории</label>
+				<select class="form-control" name="category_id">
+					<option value="" >Все товары</option>
+				{function name=category_select level=0}
+					{foreach from=$categories item=c}
+						<option value="{$c->id}" {if $c->id == $selected_id}selected{/if}>{section name=sp loop=$level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$c->name|escape}</option>
+						{category_select categories=$c->subcategories selected_id=$selected_id  level=$level+1}
+					{/foreach}
+				{/function}
+				{category_select categories=$categories selected_id=$category->id}
+				</select>
+				{/if}
+				</div>
+			</div>
+			
+			<div class="col-md-12">
+				<!-- Меню каталога -->
+				<div style="margin-bottom:20px;">
+				<label>Фильтр по типу</label>
+				<select class="form-control" name="filter">
+					<option value="" >Все товары</option>
+					<option value="featured" {if $filter == 'featured'}selected{/if}>Рекомендуемые</option>
+					<option value="discounted" {if $filter == 'discounted'}selected{/if}>Со скидкой</option>
+					<option value="visible" {if $filter == 'visible'}selected{/if}>Активные</option>
+					<option value="hidden" {if $filter == 'hidden'}selected{/if}>Неактивные</option>
+					<option value="outofstock" {if $filter == 'in_stock'}selected{/if}>Отсутствующие на складе</option>
+				</select>
+				</div>
+			</div>
+			
+			<div class="col-md-6">
+				<a href="{url filter=null category_id=null keyword=null}" class="btn btn-block btn-danger btn-flat">Очистить</a>
+			</div>
+			<div class="col-md-6">
+				<button type="submit" class="btn btn-block btn-success btn-flat">Фильтровать</button>
+			</div>
+			
+		</form>
+		</div>
+	</div>
   </div>
-  <!-- /.row -->
-</form>
 </section>
-
-{* On document load 
-
-{literal}
-<script>
-
-$(function() {
-
-	// Сортировка списка
-	$(".sortable").sortable({
-		items:             ".c_item",
-		tolerance:         "pointer",
-		handle:            ".move_zone",
-		scrollSensitivity: 40,
-		opacity:           0.7, 
-		
-		helper: function(event, ui){		
-			if($('input[type="checkbox"][name*="check"]:checked').size()<1) return ui;
-			var helper = $('<div/>');
-			$('input[type="checkbox"][name*="check"]:checked').each(function(){
-				var item = $(this).closest('.c_item');
-				helper.height(helper.height()+item.innerHeight());
-				if(item[0]!=ui[0]) {
-					helper.append(item.clone());
-					$(this).closest('.c_item').remove();
-				}
-				else {
-					helper.append(ui.clone());
-					item.find('input[type="checkbox"][name*="check"]').attr('checked', false);
-				}
-			});
-			return helper;			
-		},	
- 		start: function(event, ui) {
-  			if(ui.helper.children('.c_item').size()>0)
-				$('.ui-sortable-placeholder').height(ui.helper.height());
-		},
-		beforeStop:function(event, ui){
-			if(ui.helper.children('.c_item').size()>0){
-				ui.helper.children('.c_item').each(function(){
-					$(this).insertBefore(ui.item);
-				});
-				ui.item.remove();
-			}
-		},
-		update:function(event, ui)
-		{
-			$("#list_form input[name*='check']").attr('checked', false);
-			$("#list_form").ajaxSubmit();
-		}
-	});
-	
-	// Перенос товара в другую категорию
-	$("#action select[name=action]").on('change', function(){
-		if($(this).val() == 'move_to_category')
-			$("span#move_to_category").show();
-		else
-			$("span#move_to_category").hide();
-	});
-
-	// Перенос товара в другой бренд
-	$("#action select[name=action]").on('change', function(){
-		
-		if($(this).val() == 'move_to_brand')
-			$("span#move_to_brand").show();
-		else
-			$("span#move_to_brand").hide();
-	});
-
-	// Если есть варианты, отображать ссылку на их разворачивание
-	if($("li.variant").size()>0)
-		$("#expand").show();
-
-
-	// Показать все варианты
-	$('#expand_all').on('click', function(){
-		$("a#expand_all").hide();
-		$("a#roll_up_all").show();
-		$("a.expand_variant").hide();
-		$("a.roll_up_variant").show();
-		$(".products ul li.variant").fadeIn('fast');
-		return false;
-	});
-
-
-	// Свернуть все варианты
-	$('#roll_up_all').on('click', function(){
-		$("a#roll_up_all").hide();
-		$("a#expand_all").show();
-		$("a.roll_up_variant").hide();
-		$("a.expand_variant").show();
-		$(".products ul li.variant").fadeOut('fast');
-		return false;
-	});
-
- 
-	// Показать вариант
-	$('a.expand_variant').on('click', function(){
-		$(this).closest("div.cell").find("li.variant").fadeIn('fast');
-		$(this).closest("div.cell").find("a.expand_variant").hide();
-		$(this).closest("div.cell").find("a.roll_up_variant").show();
-		return false;
-	});
-
-	// Свернуть вариант
-	$('a.roll_up_variant').on('click', function(){
-		$(this).closest("div.cell").find("li.variant").fadeOut('fast');
-		$(this).closest("div.cell").find("a.roll_up_variant").hide();
-		$(this).closest("div.cell").find("a.expand_variant").show();
-		return false;
-	});
-
-	// Удалить товар
-	$('button.delete').on('click', function(){
-		$('#list input[type="checkbox"][name*="check"]').attr('checked', false);
-		$(this).closest("tr.c_item").find('input[type="checkbox"][name*="check"]').attr('checked', true);
-		$(this).closest("form").find('select[name="action"] option[value=delete]').attr('selected', true);
-		$(this).closest("form").submit();
-	});
-	
-	// Дублировать товар
-	$('button.duplicate').on('click', function(){
-		$('#list input[type="checkbox"][name*="check"]').attr('checked', false);
-		$(this).closest("tr.c_item").find('input[type="checkbox"][name*="check"]').attr('checked', true);
-		$(this).closest("form").find('select[name="action"] option[value=duplicate]').attr('selected', true);
-		$(this).closest("form").submit();
-	});
-	// Показать товар
-	$('button.enable').on('click', function(){
-		var icon        = $(this);
-		var line        = icon.closest("tr");
-		var but         = icon.closest(".btn");
-		var id          = line.find('input[type="checkbox"][name*="check"]').val();
-		var state       = but.hasClass('act')?0:1;
-		$.ajax({
-			type: 'POST',
-			url: 'ajax/update_object.php',
-			data: {'object': 'product', 'id': id, 'values': {'visible': state}, 'session_id': '{/literal}{$smarty.session.id}{literal}'},
-			success: function(data){
-				if(!state){
-					but.removeClass('btn-secondary');
-					but.addClass('btn-default');
-					but.removeClass('act');
-				}else{
-					but.removeClass('btn-default');
-					but.addClass('btn-secondary');
-					but.addClass('act');
-				}			
-			},
-			dataType: 'json'
-		});	
-		return false;	
-	});
-
-	// Сделать хитом
-	$('button.featured').on('click', function(){
-		var icon        = $(this);
-		var line        = icon.closest("tr");
-		var but         = icon.closest(".btn");
-		var id          = line.find('input[type="checkbox"][name*="check"]').val();
-		var state       = but.hasClass('act')?0:1;
-		$.ajax({
-			type: 'POST',
-			url: 'ajax/update_object.php',
-			data: {'object': 'product', 'id': id, 'values': {'featured': state}, 'session_id': '{/literal}{$smarty.session.id}{literal}'},
-			success: function(data){
-				if(!state){
-					but.removeClass('btn-warning');
-					but.addClass('btn-default');
-					but.removeClass('act');
-				}else{
-					but.removeClass('btn-default');
-					but.addClass('btn-warning');
-					but.addClass('act');
-				}			
-			},
-			dataType: 'json'
-		});	
-		return false;	
-	});
-
-	// Подтверждение удаления
-	$("form").submit(function() {
-		if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
-			return false;	
-	});
-	
-	
-	// Бесконечность на складе
-	$("input[name*=stock]").focus(function() {
-		if($(this).val() == '∞')
-			$(this).val('');
-		return false;
-	});
-	$("input[name*=stock]").blur(function() {
-		if($(this).val() == '')
-			$(this).val('∞');
-	});
-});
-
-</script>
-{/literal}
-*}

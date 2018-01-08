@@ -65,6 +65,9 @@ class Products extends Engine
 		if(!empty($filter['visible']))
 			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
 		
+		if(isset($filter['visible_admin']))
+			$visible_filter = $this->db->placehold('AND p.visible=?', intval($filter['visible_admin']));
+		
 		if(!empty($filter['first_in']))
 			$first_in_group = $this->db->placehold('AND (SELECT pgi.position FROM __products_groups_items AS pgi WHERE p.id = pgi.product_id LIMIT 1) = 0');
 
@@ -99,7 +102,7 @@ class Products extends Engine
 			{
 				$kw = $this->db->escape(trim($keyword));
 				if($kw!=='')
-					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
+					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
 			}
 		}
 
@@ -211,14 +214,14 @@ class Products extends Engine
 		if(!empty($filter['id']))
 			$product_id_filter = $this->db->placehold('AND p.id in(?@)', (array)$filter['id']);
 		
-		if(isset($filter['keyword']))
+		if(!empty($filter['keyword']))
 		{
 			$keywords = explode(' ', $filter['keyword']);
 			foreach($keywords as $keyword)
 			{
 				$kw = $this->db->escape(trim($keyword));
 				if($kw!=='')
-					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
+					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
 			}
 		}
 
@@ -231,8 +234,11 @@ class Products extends Engine
 		if(isset($filter['discounted']))
 			$discounted_filter = $this->db->placehold('AND (SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = ?', intval($filter['discounted']));
 
-		if(isset($filter['visible']))
-			$visible_filter = $this->db->placehold('AND p.visible=?', intval($filter['visible']));
+		if(!empty($filter['visible']))
+			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
+		
+		if(isset($filter['visible_admin']))
+			$visible_filter = $this->db->placehold('AND p.visible=?', intval($filter['visible_admin']));
 		
 		
 		if(!empty($filter['features']) && !empty($filter['features']))

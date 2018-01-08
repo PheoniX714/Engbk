@@ -370,7 +370,7 @@ class Image extends Engine
 		// Убираем комменты и т.п. из картинки
 		$thumb->stripImage();
 		
-		$thumb->setImageCompressionQuality(50);
+		//$thumb->setImageCompressionQuality(50);
 		
 		// Записываем картинку
 		if(!$thumb->writeImages($dst_file, true))

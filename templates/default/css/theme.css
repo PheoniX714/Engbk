@@ -41,6 +41,10 @@ header{
 header .logo{
 	line-height:100px;
 }
+header .logo img{
+	max-width:250px;
+	max-height:84px;
+}
 header .top-menu{
 	padding:0;
 	margin:0;
@@ -99,8 +103,8 @@ header #cart_informer{
 }
 header .cart-informer{
 	display:block;
-	width:48px;
-	height:42px;
+	width:41px;
+	height:33px;
 	background:url(../img/cart.png) 0 0 no-repeat;
 	position:relative;
 	margin:0 auto;
@@ -955,7 +959,18 @@ header .languages .lang-cont p a.selected, header .languages .lang-cont p a:hove
 	display:inline-block;
 	margin-left:40px;
 }
-
+.liqpay-button{
+	font-size:16px;
+	line-height:16px;
+	background:#5ea600;
+	border:0;
+	outline:0;
+	padding: 15px 25px;
+	color:#fff;
+}
+.liqpay-button:hover{
+	background:#4c8503;
+}
 
 
 footer{
@@ -975,9 +990,27 @@ footer .f-menu a{
 }
 footer .pay-cards{
 	padding-top:20px;
+	text-align:right;
+	vertical-align:top;
 }
 footer .pay-cards img{
-	margin-left:20px;
+	float:right;
+	padding:0;
+	margin: 0 20px 0 0;
+}
+footer .pay-cards a{
+	display:inline-block;
+	font-size:35px;
+	line-height:15px;
+	padding:0;
+	margin: 0 18px 0 0;
+	color:#555;
+}
+footer .pay-cards a:hover{
+	opacity:0.8;
+}
+footer .pay-cards a.right{
+	margin-right:40px;
 }
 footer .f-phones{
 	padding-top:20px;

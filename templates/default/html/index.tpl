@@ -16,6 +16,7 @@
 	{if $og_image}<meta property="og:image" content="{$og_image}">{/if}
 	<meta name="keywords"    content="{$meta_keywords|escape}" />
 	<link href="templates/{$settings->theme|escape}/css/{if $Speed_Insights}bootstrap.min.css{else}bootstrap-pagespeed.css{/if}" rel="stylesheet">
+    <link href="templates/{$settings->theme|escape}/css/font-awesome.min.css" rel="stylesheet">
     <link href="templates/{$settings->theme|escape}/css/theme.css" rel="stylesheet">
 	{if $Speed_Insights}<link rel="stylesheet" href="templates/{$settings->theme|escape}/css/iview.css" />{/if}
 	{$add_css}
@@ -47,7 +48,7 @@
 				  </button>
 				</div>
 				<div class="collapse navbar-collapse">
-				  <ul class="nav navbar-nav">{foreach $menu_pages as $p}{if $p->menu_id == 2}<li><a href="{if $language->id != 1}{$language->code}/{/if}{$p->url}">{$p->name}</a></li>{/if}{/foreach}{foreach $menu_pages as $p}{if $p->menu_id == 1}<li><a href="{if $language->id != 1}{$language->code}/{/if}{$p->pre_url}{$p->url}">{$p->name}</a></li>{/if}{/foreach}</ul>
+				  <ul class="nav navbar-nav">{foreach $menu_pages as $p}{if $p->menu_id == 2}<li><a href="{if $language->id != 1}{$language->code}/{/if}{$p->pre_url}{$p->url}">{$p->name}</a></li>{/if}{/foreach}{foreach $menu_pages as $p}{if $p->menu_id == 1}<li><a href="{if $language->id != 1}{$language->code}/{/if}{$p->pre_url}{$p->url}">{$p->name}</a></li>{/if}{/foreach}</ul>
 				</div>
 			  </div>
 			</div>
@@ -106,14 +107,9 @@
 					<li><a href="{if $language->id != 1}{$language->code}/{/if}news/">Публикации</a></li>
 				</ul>
 			</div>
-			<div class="col-lg-2 col-md-2 col-sm-4 hidden-xs">
-				<ul class="f-menu f-menu-col-1">
-					
-				</ul>
-			</div>
 			<div class="clear visible-sm"></div>
-			<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 pay-cards">
-				<img src="templates/{$settings->theme|escape}/img/pp.png"> <img src="templates/{$settings->theme|escape}/img/mc.png"> <img src="templates/{$settings->theme|escape}/img/vs.png">
+			<div class="col-lg-5 col-md-5 col-sm-6 col-xs-12 pay-cards">
+				<a target="__blank" href="https://www.facebook.com/MirDublenokIKozi/"><i class="fa fa-facebook-square"></i></a> <a class="right" target="__blank" href="https://www.instagram.com/mdk.ukraine/"><i class="fa fa-instagram"></i></a> <img src="templates/{$settings->theme|escape}/img/mc.png"> <img src="templates/{$settings->theme|escape}/img/vs.png">
 			</div>
 			<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
 				<div class="f-phones">
@@ -154,5 +150,6 @@
 	<script src="templates/{$settings->theme|escape}/js/jquery-ui.min.js"></script>
     <script src="templates/{$settings->theme|escape}/js/ajax_cart.js"></script>
 	{$add_script}{/if}
+	<script type="text/javascript" src="//consultsystems.ru/script/36109/" async charset="utf-8"></script>
   </body>
 </html>

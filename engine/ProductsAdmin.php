@@ -31,9 +31,9 @@ class ProductsAdmin extends Engine
 			elseif($f == 'discounted')
 				$filter['discounted'] = 1; 
 			elseif($f == 'visible')
-				$filter['visible'] = 1; 
+				$filter['visible_admin'] = 1; 
 			elseif($f == 'hidden')
-				$filter['visible'] = 0; 
+				$filter['visible_admin'] = 0; 
 			elseif($f == 'outofstock')
 				$filter['in_stock'] = 0; 
 			$this->templates->assign('filter', $f);
@@ -47,7 +47,7 @@ class ProductsAdmin extends Engine
 			$this->templates->assign('keyword', $keyword);
 		}
 			
-		// Обработка действий 	
+		// Обработка действий
 		if($this->request->method('post'))
 		{
 			// Сохранение цен и наличия

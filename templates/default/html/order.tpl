@@ -5,7 +5,7 @@
 			<a href="./">Главная</a> / Заказ №{$order->id}
 		</div>
 		
-		<h2>Спасибо, Ваш заказ оформлен</h2>
+		<h2>Спасибо, Ваш заказ оформлен {if $order->paid}<span style="color:green;">и успешно оплачен</span>{/if}</h2>
 		
 		{* Список покупок *}
 		<ul id="purchases">
@@ -25,7 +25,7 @@
 				</div>
 				
 				<div class="col-lg-1">
-					{$purchase->variant->name|escape}	
+					{$purchase->variant->name|escape}
 				</div>
 
 				{* Количество *}
@@ -44,17 +44,32 @@
 		
 		<div class="col-lg-12 total-price">Общая стоимоть заказа:  <span>{$order->total_price|convert}&nbsp;{$currency->sign}</span></div>
 
-		<h2>Данные получателя</h2>
-		<table class="table_info table-striped">
-		<tr><td class='name'>Дата заказа</td><td>{$order->date|date} в {$order->date|time}</td></tr>
-		{if $order->name}	<tr><td class='name'>Имя</td><td>{$order->name|escape}</td></tr>{/if}
-		{if $order->email}	<tr><td class='name'>Email</td><td>{$order->email|escape}</td></tr>{/if}
-		{if $order->phone}	<tr><td class='name'>Телефон</td><td>{$order->phone|escape}</td></tr>{/if}
-		{if $order->delivery_id}<tr><td class='name'>Способ доставки</td><td>{if $order->delivery_id == 1}Самовывоз{elseif $order->delivery_id == 2}Новая почта{/if}</td></tr>{/if}
-		{if $order->city}<tr><td class='name'>Город\Область</td><td>{$order->city|escape}</td></tr>{/if}
-		{if $order->address}<tr><td class='name'>Адрес доставки</td><td>{$order->address|escape}</td></tr>{/if}
-		{if $order->comment}<tr><td class='name'>Комментарий</td><td>{$order->comment|escape|nl2br}</td></tr>{/if}
-		</table>
+		<div class="col-lg-6">
+			<h2>Данные получателя</h2>
+			<table class="table_info table-striped">
+			<tr><td class='name'>Дата заказа</td><td>{$order->date|date} в {$order->date|time}</td></tr>
+			{if $order->name}	<tr><td class='name'>Имя</td><td>{$order->name|escape}</td></tr>{/if}
+			{if $order->email}	<tr><td class='name'>Email</td><td>{$order->email|escape}</td></tr>{/if}
+			{if $order->phone}	<tr><td class='name'>Телефон</td><td>{$order->phone|escape}</td></tr>{/if}
+			{if $order->delivery_id}<tr><td class='name'>Способ доставки</td><td>{if $order->delivery_id == 1}Самовывоз{elseif $order->delivery_id == 2}Новая почта{/if}</td></tr>{/if}
+			{if $order->city}<tr><td class='name'>Город\Область</td><td>{$order->city|escape}</td></tr>{/if}
+			{if $order->address}<tr><td class='name'>Адрес доставки</td><td>{$order->address|escape}</td></tr>{/if}
+			{if $order->comment}<tr><td class='name'>Комментарий</td><td>{$order->comment|escape|nl2br}</td></tr>{/if}
+			</table>
+		</div>
+		<div class="col-lg-6">
+			{if !$order->paid and $order->id == 1}
+			{* Выбор способа оплаты *}
+			{if $payment_methods && !$payment_method && $order->total_price>0}
+			{elseif $payment_method}
+			<h2>
+			Оплатить {$order->total_price|convert:$payment_method->currency_id}&nbsp;{$all_currencies[$payment_method->currency_id]->sign} онлайн через Liqpay
+			</h2>
 
+			{* Форма оплаты, генерируется модулем оплаты *}
+			{checkout_form order_id=$order->id module=$payment_method->module}
+			{/if}
+			{/if}
+		</div>
 	</div>	
 </section>

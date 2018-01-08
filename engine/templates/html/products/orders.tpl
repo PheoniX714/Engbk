@@ -55,7 +55,7 @@
 						{$order->id|escape}
 					</td>
 					<td class="name-cell">
-						<a href="{url module=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}">{$order->name|escape}</a>
+						<a href="{url module=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}"> {$order->name|escape}</a> {if $order->paid}(<span class="text-green"><b>Оплачен</b></span>){/if}
 					</td>
 					<td class="date-cell">
 						{$order->date|date} в {$order->date|time}

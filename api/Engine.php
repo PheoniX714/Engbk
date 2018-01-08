@@ -19,6 +19,7 @@ class Engine
 		'slider'      	 		=> 'Slider',
 		// Классы дополнений установленых в CMS
 		'money'  		 		=> 'Currency',
+		'payment'  		 		=> 'Payment',
 		'products'  		 	=> 'Products',
 		'categories' 			=> 'Categories',
 		'variants'   			=> 'Variants',
