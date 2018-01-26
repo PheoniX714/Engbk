@@ -23,6 +23,7 @@ class Engine
 		'products'  		 	=> 'Products',
 		'categories' 			=> 'Categories',
 		'variants'   			=> 'Variants',
+		'comments'   			=> 'Comments',
 		'features'   			=> 'Features',
 		'cart'       			=> 'Cart',
 		'orders'     			=> 'Orders',		

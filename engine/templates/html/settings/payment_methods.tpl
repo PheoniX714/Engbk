@@ -33,8 +33,8 @@
 					<a href="{url module=PaymentMethodAdmin id=$payment_method->id return=$smarty.server.REQUEST_URI}">{$payment_method->name}</a>
 				</div>
 				<div class="icons cell">
-					<a class="enable" title="Активен" href="#"></a>
-					<a class="delete" title="Удалить" href="#"></a>
+					<a class="enable" href="#"></a>
+					<a class="delete" href="#"></a>
 				</div>
 				<div class="clear"></div>
 			</div>

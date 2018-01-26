@@ -61,9 +61,9 @@
 						<b>{$post->date|date}</b>
 					</td>
 					<td>
-						<a href="../news/{$post->url}" class="btn btn-sm btn-primary preview btn-flat" title="Предпросмотр в новом окне"  target="_blank"><i class="fa fa-desktop"></i></a>
-						<button class="enable btn btn-sm {if !$post->visible}btn-default{else}btn-success act{/if} btn-flat" title="Активен" ><i class="fa fa-lightbulb-o"></i></button>
-						<button class="delete btn btn-sm btn-danger btn-flat" title="Удалить" ><i class="fa fa-trash-o"></i></button>
+						<a href="../news/{$post->url}" class="btn btn-sm btn-primary preview btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
+						<button class="enable btn btn-sm {if !$post->visible}btn-default{else}btn-success act{/if} btn-flat" ><i class="fa fa-lightbulb-o"></i></button>
+						<button class="delete btn btn-sm btn-danger btn-flat" ><i class="fa fa-trash-o"></i></button>
 					</td>
 						
 				</tr>

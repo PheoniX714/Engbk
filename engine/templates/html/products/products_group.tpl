@@ -109,7 +109,7 @@
 								<a href="{url module=ProductAdmin id=$group_product->id}">{$group_product->name}</a>
 								</div>
 								<div class="icons_cell col-md-1">
-								<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+								<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
 								</div>
 								<div class="clear"></div>
 							</div>
@@ -127,7 +127,7 @@
 								<a class="group_product_name" href=""></a>
 								</div>
 								<div class="icons_cell col-md-1">
-								<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+								<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
 								</div>
 								<div class="clear"></div>
 							</div>

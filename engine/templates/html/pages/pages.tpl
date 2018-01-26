@@ -22,8 +22,8 @@
 	</ol>
 </section>
 
-	<!-- Main content -->
-    <section class="content">
+<!-- Main content -->
+<section class="content">
 	<form id="list_form" method="post">
 	<!-- Main row -->
       <div class="row">
@@ -56,8 +56,8 @@
 					  <div class="tools">
 						<a href="../{$page->pre_url}{$page->url}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
 						<a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-edit"></i></a>
-						<button class="btn btn-sm {if !$page->visible}btn-default{else}btn-success enbl{/if} enable btn-flat" title="Активна"><i class="fa fa-lightbulb-o"></i></button>
-						<button class="btn btn-sm btn-danger l-delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+						<button class="btn btn-sm {if !$page->visible}btn-default{else}btn-success enbl{/if} enable btn-flat" ><i class="fa fa-lightbulb-o"></i></button>
+						<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
 					  </div>
 					</li>
 					{pages_tree pages=$page->subpages level=$level+1}

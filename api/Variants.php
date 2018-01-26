@@ -61,6 +61,22 @@ class Variants extends Engine
 		$this->db->query($query);
 		return $id;
 	}
+	public function get_max_price()
+	{	
+		$query = $this->db->placehold("SELECT MAX(v.price) as price FROM __variants v");
+		
+		$this->db->query($query);	
+		$variant = $this->db->result();
+		return $variant;
+	}
+	public function get_min_price()
+	{	
+		$query = $this->db->placehold("SELECT MIN(v.price) as price FROM __variants v");
+		
+		$this->db->query($query);	
+		$variant = $this->db->result();
+		return $variant;
+	}
 	
 	public function add_variant($variant)
 	{

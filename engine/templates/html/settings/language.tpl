@@ -74,6 +74,19 @@
 						</div>
 						
 					</div>
+					<div class="form-group col-sm-4">
+						<label for="currency_id">Связанная валюта</label>
+						<div class="input-group">
+							<span class="input-group-addon"><i class="fa fa-money"></i></span>
+							<select class="form-control" id="currency_id" name="currency_id">
+								<option value="0">По умолчанию</option>
+								{foreach $currencies as $c}
+								<option {if $l->currency_id == $c->id}selected{/if} value="{$c->id}">{$c->name|escape}</option>
+								{/foreach}
+							</select>
+						</div>
+						
+					</div>
 				</div>
 				<!-- /.box-body -->
 			</div>

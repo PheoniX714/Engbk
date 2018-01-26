@@ -55,8 +55,8 @@
 					  <div class="tools">
 						<a href="../catalog/{$category->url}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
 						<a href="{url module=CategoryAdmin id=$category->id return=$smarty.server.REQUEST_URI}" class="btn btn-primary btn-sm btn-flat"><i class="fa fa-pencil"></i></a>
-						<button class="btn btn-sm {if !$category->visible}btn-default{else}btn-success enbl{/if} enable btn-flat" title="Активна"><i class="fa fa-lightbulb-o"></i></button>
-						<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+						<button class="btn btn-sm {if !$category->visible}btn-default{else}btn-success enbl{/if} enable btn-flat"><i class="fa fa-lightbulb-o"></i></button>
+						<button class="btn btn-sm btn-danger delete btn-flat" ><i class="fa fa-trash-o"></i></button>
 					  </div>
 					</li>
 					{categories_tree categories=$category->subcategories level=$level+1}

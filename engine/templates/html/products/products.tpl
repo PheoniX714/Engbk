@@ -76,19 +76,19 @@
 						<ul>
 						{foreach $product->variants as $variant}
 							<li {if !$variant@first}class="variant" style="display:none;"{/if}>
-								<div class="variant-name"><i title="{$variant->name|escape}">{$variant->name|escape|truncate:20:'…':true:true}</i></div>
-								<input style="max-width:90px" type="text" name="price[{$variant->id}]" value="{$variant->price}" class="form-control" {if $variant->compare_price>0}title="Старая цена &mdash; {$variant->compare_price} {$currency->sign}"{/if} />&nbsp;<label>{$currency->sign}</label>
+								<div class="variant-name"><i>{$variant->name|escape|truncate:20:'…':true:true}</i></div>
+								<input style="max-width:90px" type="text" name="price[{$variant->id}]" value="{$variant->price}" class="form-control" />&nbsp;<label>{$currency->sign}</label>
 								<input class="form-control" type="text" name="stock[{$variant->id}]" value="{if $variant->infinity}∞{else}{$variant->stock}{/if}" style="max-width:60px;min-width:60px" />&nbsp;<label>{$settings->units}</label>
 							</li>
 						{/foreach}
 						</ul>
 					</td>
 					<td class="actions-cell">
-						<button class="featured btn btn-sm {if !$product->featured}btn-default{else}btn-warning act{/if} btn-flat btn-actions" data-toggle="tooltip" title="Рекомендуемый"><i class="fa fa-fire"></i></button>						
-						<button class="enable btn btn-sm btn-flat {if !$product->visible}btn-default{else}btn-success act{/if} btn-actions" data-toggle="tooltip" title="Активен" ><i class="fa fa-lightbulb-o"></i></button>
-						<a href="../products/{$product->url}" class="btn btn-sm btn-primary btn-flat btn-actions preview" data-toggle="tooltip" title="Открыть товар на сайте в новом окне"  target="_blank"><i class="fa fa-share"></i></a>
-						<a href="{url module=ProductAdmin id=$product->id }" class="btn btn-sm btn-flat btn-primary btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>
-						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" data-toggle="tooltip" title="Удалить" ><i class="fa fa-trash-o"></i></button>
+						<button class="featured btn btn-sm {if !$product->featured}btn-default{else}btn-warning act{/if} btn-flat btn-actions" ><i class="fa fa-fire"></i></button>						
+						<button class="enable btn btn-sm btn-flat {if !$product->visible}btn-default{else}btn-success act{/if} btn-actions" ><i class="fa fa-lightbulb-o"></i></button>
+						<a href="../products/{$product->url}" class="btn btn-sm btn-primary btn-flat btn-actions preview" target="_blank"><i class="fa fa-share"></i></a>
+						<a href="{url module=ProductAdmin id=$product->id }" class="btn btn-sm btn-flat btn-primary btn-actions"><i class="fa fa-pencil"></i></a>
+						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" ><i class="fa fa-trash-o"></i></button>
 					</td>
 						
 				</tr>
@@ -173,7 +173,8 @@
 					<option value="discounted" {if $filter == 'discounted'}selected{/if}>Со скидкой</option>
 					<option value="visible" {if $filter == 'visible'}selected{/if}>Активные</option>
 					<option value="hidden" {if $filter == 'hidden'}selected{/if}>Неактивные</option>
-					<option value="outofstock" {if $filter == 'in_stock'}selected{/if}>Отсутствующие на складе</option>
+					<option value="in_stock" {if $filter == 'in_stock'}selected{/if}>Есть на складе</option>
+					<option value="outofstock" {if $filter == 'outofstock'}selected{/if}>Отсутствующие на складе</option>
 				</select>
 				</div>
 			</div>

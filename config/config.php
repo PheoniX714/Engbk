@@ -6,13 +6,13 @@
 db_server = "astyle.mysql.ukraine.com.ua"
 
 ;Пользователь базы данных
-db_user = "astyle_mdk"
+db_user = "astyle_vivavknew"
 
 ;Пароль к базе
-db_password = "nfytdqe9"
+db_password = "cq3wbtb9"
 
 ;Имя базы
-db_name = "astyle_mdk"
+db_name = "astyle_vivavknew"
 
 ;Префикс для таблиц
 db_prefix = f_;

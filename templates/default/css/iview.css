@@ -87,23 +87,24 @@
 #iview .iview-controlNav .iview-items ul li{
 	display: inline-block;
 	position: relative;
-	width: 15px;
-    height: 15px;
+	width: 25px;
+    height: 25px;
 	margin:0 5px;
 }
 #iview .iview-controlNav .iview-items ul li a{
 	display: inline-block;
 	position: relative;
-	width: 12px;
-    height: 12px;
-	border-radius:10px;
+	width: 24px;
+    height: 24px;
+	border-radius:24px;
 	text-indent:-9999px;
 	background:transparent;
 	cursor:pointer;
-	border:3px solid #fff;
+	border:0;
+	background:#fff;
 }
 #iview .iview-controlNav .iview-items ul li a:hover, #iview .iview-controlNav .iview-items ul li a.active {
-	background:#fff;
+	background:#888fb0;
 }
 #iview .iview-controlNav .iview-tooltip {
 	display: none !important;
@@ -157,8 +158,8 @@
 
 #iview .iviewSlider {
 	display: block;
-	width: 1920px;
-	height: 500px;
+	width: 848px;
+	height: 496px;
 	overflow: hidden;
 }
 #iview .iviewSlider a{

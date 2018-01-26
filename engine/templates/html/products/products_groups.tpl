@@ -59,8 +59,8 @@
 						{$group->group_code|escape}
 					</td>
 					<td class="actions-cell">
-						<a href="{url module=ProductsGroupAdmin id=$group->id }" class="btn btn-sm btn-flat btn-primary btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>
-						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" data-toggle="tooltip" title="Удалить" ><i class="fa fa-trash-o"></i></button>
+						<a href="{url module=ProductsGroupAdmin id=$group->id }" class="btn btn-sm btn-flat btn-primary btn-actions"><i class="fa fa-pencil"></i></a>
+						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" ><i class="fa fa-trash-o"></i></button>
 					</td>
 						
 				</tr>

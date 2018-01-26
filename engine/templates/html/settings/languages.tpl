@@ -42,6 +42,7 @@
 						</th>
 						<th>Название языка</th>
 						<th>Код ISO</th>
+						<th>Связанная валюта</th>
 						<th class="actions-cell">Действия</th>
 					</tr>
 				</thead>
@@ -61,10 +62,13 @@
 						<td class="text-cell">
 							<b>{$l->code|escape}</b>
 						</td>
+						<td class="text-cell">
+							<b>{$l->currency_id|escape}</b>
+						</td>
 						<td>
-							<a href="{url module=LanguageAdmin id=$l->id }" class="btn btn-sm btn-flat btn-primary btn-flat btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>&nbsp;
-							{if $l->id != 1}<button type="button" class="btn btn-flat {if !$l->visible}btn-default{else}btn-success active{/if} lang-enable" data-toggle="tooltip" title="Показывать на сайте"><i class="fa fa-lightbulb-o"></i></button>&nbsp;{/if}
-							{if $l->id != 1}<button type="button" class="btn btn-flat btn-danger delete" data-toggle="tooltip" title="Удалить"><i class="fa fa-trash-o"></i></button>{/if}
+							<a href="{url module=LanguageAdmin id=$l->id }" class="btn btn-sm btn-flat btn-primary btn-flat btn-actions" ><i class="fa fa-pencil"></i></a>&nbsp;
+							{if $l->id != 1}<button type="button" class="btn btn-flat {if !$l->visible}btn-default{else}btn-success active{/if} lang-enable"><i class="fa fa-lightbulb-o"></i></button>&nbsp;{/if}
+							{if $l->id != 1}<button type="button" class="btn btn-flat btn-danger delete"><i class="fa fa-trash-o"></i></button>{/if}
 						</td>
 					</tr>
 					{/foreach}

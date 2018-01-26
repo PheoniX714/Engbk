@@ -11,6 +11,7 @@ class LanguageAdmin extends Engine
 			$language->id = $this->request->post('id', 'integer');
 			$language->name = $this->request->post('name');
 			$language->code = substr($this->request->post('code'), 0, 2);
+			$language->currency_id = $this->request->post('currency_id', 'integer');
 			
 			
 			if(empty($language->name))
@@ -47,7 +48,11 @@ class LanguageAdmin extends Engine
 		if(!empty($language))
 		{
 			$this->templates->assign('l', $language);
+			
 		}
+		
+		$currencies = $this->money->get_currencies();
+	 	$this->templates->assign('currencies', $currencies);
 		
  	  	return $this->templates->fetch('settings/language.tpl');
 	}

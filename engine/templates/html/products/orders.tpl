@@ -64,8 +64,8 @@
 						{$order->total_price|convert} {$currency->sign}
 					</td>
 					<td class="actions-cell" style="width:100px;">
-						<a href="{url module=OrderAdmin id=$order->id }" class="btn btn-sm btn-flat btn-primary btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>
-						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" data-toggle="tooltip" title="Удалить" ><i class="fa fa-trash-o"></i></button>
+						<a href="{url module=OrderAdmin id=$order->id }" class="btn btn-sm btn-flat btn-primary btn-actions" ><i class="fa fa-pencil"></i></a>
+						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" ><i class="fa fa-trash-o"></i></button>
 					</td>
 						
 				</tr>

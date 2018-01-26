@@ -34,6 +34,8 @@ class ProductsAdmin extends Engine
 				$filter['visible_admin'] = 1; 
 			elseif($f == 'hidden')
 				$filter['visible_admin'] = 0; 
+			elseif($f == 'in_stock')
+				$filter['in_stock'] = 1; 
 			elseif($f == 'outofstock')
 				$filter['in_stock'] = 0; 
 			$this->templates->assign('filter', $f);

@@ -56,9 +56,9 @@
 					<td class="text-cell"><b>{$m->login|escape}</b></td>
 					<td class="text-cell"><b>{$m->last_login|escape}</b></td>
 					<td>
-						<a href="index.php?module=ManagerAdmin&id={$m->id|urlencode}" class="btn btn-sm btn-primary btn-flat btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>
+						<a href="index.php?module=ManagerAdmin&id={$m->id|urlencode}" class="btn btn-sm btn-primary btn-flat btn-actions"><i class="fa fa-pencil"></i></a>
 						{if $manager->id != $m->id and $m->id != 1}
-						<button class="delete btn btn-sm btn-danger btn-flat btn-actions" data-toggle="tooltip" title="Удалить"><i class="fa fa-trash-o"></i></button>
+						<button class="delete btn btn-sm btn-danger btn-flat btn-actions"><i class="fa fa-trash-o"></i></button>
 						{/if}
 					</td>
 				</tr>

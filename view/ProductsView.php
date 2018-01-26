@@ -11,14 +11,41 @@ class ProductsView extends View
 	 */	
 	function fetch()
 	{
+		$max_price = $this->variants->get_max_price();
+		$min_price = $this->variants->get_min_price();
+		
+		if(empty($max_price))
+			$max_price = 0;
+		if(empty($min_price))
+			$min_price = 0;
+				
+		$this->templates->assign('max_price', $max_price->price);
+		$this->templates->assign('min_price', $min_price->price);
+		
+		$filter_min_price = $min_price->price;
+		$filter_max_price = $max_price->price;
 		
 		// GET-Параметры
 		$category_url = $this->request->get('category', 'string');
 		$brand_url    = $this->request->get('brand', 'string');
+		$price_range = $this->request->get('price_range', 'string');
+		$price_max = $this->request->get('price_max', 'string');
+		
+		if($price_range){
+			list($filter_min_price, $filter_max_price) = explode(" - ", $price_range);
+			$filter_min_price = intval($filter_min_price);
+			$filter_max_price = intval($filter_max_price);
+		}
+		
+		$this->templates->assign('filter_min_price', $filter_min_price);
+		$this->templates->assign('filter_max_price', $filter_max_price);
 		
 		$filter = array();
 		$filter['visible'] = 1;
-		$filter['first_in'] = 1;
+		
+		$filter['min_price'] = $filter_min_price;	
+		$filter['max_price'] = $filter_max_price;
+		/* $filter['first_in'] = 1; */
 
 		// Если задан бренд, выберем его из базы
 		if (!empty($brand_url))
@@ -106,7 +133,19 @@ class ProductsView extends View
 
 			$this->templates->assign('features', $features);
  		}
+		
+		$products_colors = $this->products->get_products_colors($filter);
+		$this->templates->assign('products_colors', $products_colors);
+		
 		$this->templates->assign('filter_features', $filter['features']);
+		if($filter_colors = $this->request->get('colors')){
+			foreach($filter_colors as $fc){
+				if(in_array($fc,$products_colors))
+					$filter['colors'][] = $fc;
+			}
+		}
+		$this->templates->assign('filter_colors', $filter['colors']);	
+		
 		// Постраничная навигация
 		$items_per_page = $this->settings->products_num;		
 		// Текущая страница в постраничном выводе

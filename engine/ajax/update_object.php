@@ -35,6 +35,10 @@ switch ($object)
     	if($engine->managers->access('pages'))
         $result = $engine->languages->update_language($id, $values);
         break;
+	case 'comment':
+    	if($engine->managers->access('comments'))
+        $result = $engine->comments->update_comment($id, $values);
+        break;
 		
 	case 'product':
     	if($engine->managers->access('products'))
@@ -63,6 +67,10 @@ switch ($object)
 	case 'gallery_album_delete_image':
     	if($engine->managers->access('gallery'))
         $result = $engine->gallery_albums->delete_image($id, $values);
+        break;
+	case 'product_delete_image':
+    	if($engine->managers->access('products'))
+        $result = $engine->products->delete_image($id);
         break;
 }
 

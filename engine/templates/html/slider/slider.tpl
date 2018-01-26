@@ -61,8 +61,8 @@
 					</td>
 					<td style="line-height:120px;">
 						<a href="{url module=SlideAdmin id=$slide->id return=$smarty.server.REQUEST_URI}" class="btn btn-sm btn-flat btn-primary"><i class="fa fa-pencil"></i></a>
-						<button class="btn btn-sm btn-flat {if !$slide->visible}btn-default{else}btn-success act{/if} enable" title="Активна"><i class="fa fa-lightbulb-o"></i></button>
-						<button class="btn btn-sm btn-flat btn-danger delete" title="Удалить"><i class="fa fa-trash-o"></i></button>
+						<button class="btn btn-sm btn-flat {if !$slide->visible}btn-default{else}btn-success act{/if} enable" ><i class="fa fa-lightbulb-o"></i></button>
+						<button class="btn btn-sm btn-flat btn-danger delete"><i class="fa fa-trash-o"></i></button>
 					</td>
 				</tr>
 				{/foreach}

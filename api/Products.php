@@ -21,6 +21,7 @@ class Products extends Engine
 		$limit = 100;
 		$page = 1;
 		$category_id_filter = '';
+		$colors_id_filter = '';
 		$brand_id_filter = '';
 		$product_id_filter = '';
 		$features_filter = '';
@@ -52,6 +53,9 @@ class Products extends Engine
 		
 		if(!empty($filter['brand_id']))
 			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
+		
+		if(!empty($filter['colors']))
+			$colors_id_filter = $this->db->placehold('AND p.color in(?@)', (array)$filter['colors']);
 
 		if(isset($filter['featured']))
 			$is_featured_filter = $this->db->placehold('AND p.featured=?', intval($filter['featured']));
@@ -109,40 +113,10 @@ class Products extends Engine
 		if(!empty($filter['features']) && !empty($filter['features']))
 			foreach($filter['features'] as $feature=>$value)
 				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, $value);
+				
+		if(!empty($filter['min_price']) && !empty($filter['max_price']))
+			$prices = $this->db->placehold('AND p.id in(SELECT v.product_id FROM __variants v WHERE v.price >= ? AND v.price <= ? AND v.product_id = p.id)', intval($filter['min_price']), intval($filter['max_price']));
 
-		/* $query = "SELECT  
-					p.id,
-					p.url,
-					p.brand_id,
-					p.name,
-					p.annotation,
-					p.body,
-					p.position,
-					p.created as created,
-					p.visible, 
-					p.featured, 
-					p.meta_title, 
-					p.meta_keywords, 
-					p.meta_description, 
-					b.name as brand,
-					b.url as brand_url
-				FROM __products p		
-				$category_id_filter 
-				LEFT JOIN __brands b ON p.brand_id = b.id
-				WHERE 
-					1
-					$product_id_filter
-					$brand_id_filter
-					$features_filter
-					$keyword_filter
-					$is_featured_filter
-					$discounted_filter
-					$in_stock_filter
-					$visible_filter
-				$group_by
-				ORDER BY $order
-					$sql_limit"; */
-					
 		$query = "SELECT  
 					p.id,
 					p.url,
@@ -165,6 +139,7 @@ class Products extends Engine
 					1
 					$product_id_filter
 					$brand_id_filter
+					$colors_id_filter
 					$first_in_group
 					$features_filter
 					$keyword_filter
@@ -172,6 +147,7 @@ class Products extends Engine
 					$discounted_filter
 					$in_stock_filter
 					$visible_filter
+					$prices
 				$group_by
 				ORDER BY $order
 					$sql_limit";
@@ -193,6 +169,7 @@ class Products extends Engine
 	{		
 		$category_id_filter = '';
 		$brand_id_filter = '';
+		$colors_id_filter = '';
 		$product_id_filter = '';
 		$keyword_filter = '';
 		$visible_filter = '';
@@ -210,6 +187,9 @@ class Products extends Engine
 		
 		if(!empty($filter['brand_id']))
 			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
+		
+		if(!empty($filter['colors']))
+			$colors_id_filter = $this->db->placehold('AND p.color in(?@)', (array)$filter['colors']);
 
 		if(!empty($filter['id']))
 			$product_id_filter = $this->db->placehold('AND p.id in(?@)', (array)$filter['id']);
@@ -248,11 +228,15 @@ class Products extends Engine
 		if(!empty($filter['first_in']))
 			$first_in_group = $this->db->placehold('AND (SELECT pgi.position FROM __products_groups_items AS pgi WHERE p.id = pgi.product_id LIMIT 1) = 0');
 		
+		if(!empty($filter['min_price']) && !empty($filter['max_price']))
+			$prices = $this->db->placehold('AND p.id in(SELECT v.product_id FROM __variants v WHERE v.price >= ? AND v.price <= ? AND v.product_id = p.id)', intval($filter['min_price']), intval($filter['max_price']));
+		
 		$query = "SELECT count(distinct p.id) as count
 				FROM __products AS p
 				$category_id_filter
 				WHERE 1
 					$brand_id_filter
+					$colors_id_filter
 					$product_id_filter
 					$keyword_filter
 					$first_in_group
@@ -260,7 +244,8 @@ class Products extends Engine
 					$in_stock_filter
 					$discounted_filter
 					$visible_filter
-					$features_filter ";
+					$features_filter
+					$prices	";
 
 		$this->db->query($query);	
 		return $this->db->result('count');
@@ -339,6 +324,85 @@ class Products extends Engine
 		}
 		else
 			return false;
+	}
+	
+	public function get_products_colors($filter = array())
+	{		
+		// По умолчанию
+		$category_id_filter = '';
+		$brand_id_filter = '';
+		$product_id_filter = '';
+		$features_filter = '';
+		$keyword_filter = '';
+		$visible_filter = '';
+		$is_featured_filter = '';
+		$discounted_filter = '';
+		$in_stock_filter = '';
+		$first_in_group = '';
+		$group_by = '';
+		
+		if(!empty($filter['id']))
+			$product_id_filter = $this->db->placehold('AND p.id in(?@)', (array)$filter['id']);
+
+		if(!empty($filter['category_id']))
+		{
+			$category_id_filter = $this->db->placehold('INNER JOIN __products_categories pc ON pc.product_id = p.id AND pc.category_id in(?@)', (array)$filter['category_id']);
+			$group_by = "GROUP BY p.id";
+		}
+		
+		if(!empty($filter['brand_id']))
+			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
+
+		if(isset($filter['featured']))
+			$is_featured_filter = $this->db->placehold('AND p.featured=?', intval($filter['featured']));
+
+		if(isset($filter['discounted']))
+			$discounted_filter = $this->db->placehold('AND (SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = ?', intval($filter['discounted']));
+
+		if(isset($filter['in_stock']))
+			$in_stock_filter = $this->db->placehold('AND (SELECT count(*)>0 FROM __variants pv WHERE pv.product_id=p.id AND pv.price>0 AND (pv.stock IS NULL OR pv.stock>0) LIMIT 1) = ?', intval($filter['in_stock']));
+
+		if(!empty($filter['visible']))
+			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
+		
+		if(!empty($filter['keyword']))
+		{
+			$keywords = explode(' ', $filter['keyword']);
+			foreach($keywords as $keyword)
+			{
+				$kw = $this->db->escape(trim($keyword));
+				if($kw!=='')
+					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
+			}
+		}
+
+		if(!empty($filter['features']) && !empty($filter['features']))
+			foreach($filter['features'] as $feature=>$value)
+				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, $value);
+
+		$query = "SELECT p.color FROM __products p 
+				$category_id_filter 
+				WHERE 
+					1
+					$product_id_filter
+					$brand_id_filter
+					$first_in_group
+					$features_filter
+					$keyword_filter
+					$is_featured_filter
+					$discounted_filter
+					$in_stock_filter
+					$visible_filter
+				GROUP BY p.color
+				ORDER BY p.color";
+		
+		$this->db->query($query);
+		
+		$results = array();
+		foreach($r = $this->db->results() as $c)
+			$results[] = $c->color;
+			
+		return $results;
 	}
 	
 	

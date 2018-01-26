@@ -12,6 +12,8 @@ class IndexAdmin extends Engine
 		'NewsAdmin'           		=> 'news',
 		'PostAdmin'           		=> 'news',
 		'FeedbacksAdmin'     		=> 'feedbacks',
+		'CommentAdmin'     			=> 'comments',
+		'CommentsAdmin'     		=> 'comments',
 		'SliderAdmin'      			=> 'settings',
 		'SlideAdmin'       			=> 'settings',
 		'LanguagesAdmin'      		=> 'settings',

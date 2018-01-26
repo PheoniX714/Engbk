@@ -32,6 +32,7 @@ class MainView extends View
 			$this->templates->assign('meta_keywords', $page->meta_keywords);
 			$this->templates->assign('meta_description', $page->meta_description);
 		}
+		
 		return $this->templates->fetch('main.tpl');
 	}
 }

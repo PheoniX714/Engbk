@@ -156,10 +156,10 @@
 									</td>
 									<td class="actions-cell" style="width:100px;">
 										{if $smarty.foreach.variants.first}
-										<button type="button" class="btn btn-sm btn-flat btn-success btn-actions" data-toggle="tooltip" title="Добавить вариант" id="add_variant" {if $language_id != 1}disabled{/if}><i class="fa fa-plus"></i></button>
-										<button type="button" class="btn btn-sm btn-flat btn-danger btn-actions" style="display:none;" data-toggle="tooltip" title="Удалить вариант" id="del_variant" {if $language_id != 1}disabled{/if} ><i class="fa fa-trash-o"></i></button>
+										<button type="button" class="btn btn-sm btn-flat btn-success btn-actions" id="add_variant" {if $language_id != 1}disabled{/if}><i class="fa fa-plus"></i></button>
+										<button type="button" class="btn btn-sm btn-flat btn-danger btn-actions" style="display:none;" id="del_variant" {if $language_id != 1}disabled{/if} ><i class="fa fa-trash-o"></i></button>
 										{else}
-										<button type="button" class="btn btn-sm btn-flat btn-danger btn-actions" data-toggle="tooltip" title="Удалить вариант" id="del_variant" {if $language_id != 1}disabled{/if} ><i class="fa fa-trash-o"></i></button>
+										<button type="button" class="btn btn-sm btn-flat btn-danger btn-actions" id="del_variant" {if $language_id != 1}disabled{/if} ><i class="fa fa-trash-o"></i></button>
 										{/if}
 									</td>
 										
@@ -233,8 +233,8 @@
 										<div class="image-controls">
 											<input name="positions[]" type="hidden" value="{$image->id|escape}" class="form-control" />
 											<div class="move_zone"><i class="fa fa-arrows"></i></div>
-											<div class="open-image"><a href="/files/originals/{$image->filename}" data-toggle="tooltip" title="Открыть изображение в новом окне" target="__blank"><i class="fa fa-eye"></i></a></div>
-											<div class="delete-image" data-toggle="tooltip" title="Удалить"><i class="fa fa-trash"></i></div>
+											<div class="open-image"><a href="/files/originals/{$image->filename}" target="__blank"><i class="fa fa-eye"></i></a></div>
+											<div class="delete-image" ><i class="fa fa-trash"></i></div>
 										</div>
 									</div>
 								</div>
@@ -338,7 +338,7 @@
 										<a href="{url id=$related_product->id}">{$related_product->name}</a>
 										</div>
 										<div class="icons_cell col-md-1">
-										<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+										<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
 										</div>
 										<div class="clear"></div>
 									</div>
@@ -355,7 +355,7 @@
 										<a class="related_product_name" href=""></a>
 										</div>
 										<div class="icons_cell col-md-1">
-										<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+										<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
 										</div>
 										<div class="clear"></div>
 									</div>
@@ -366,9 +366,9 @@
 					  <div class="tab-pane" id="product-group" >
 							<div class="col-lg-12">
 								{if $product_group}
-									<a href="{url module=ProductsGroupAdmin id=$product_group->group_id}" class="btn btn-sm btn-flat btn-primary" data-toggle="tooltip" title="Редактировать группу товара"><i class="fa fa-pencil"></i> Редактировать группу</a>
+									<a href="{url module=ProductsGroupAdmin id=$product_group->group_id}" class="btn btn-sm btn-flat btn-primary" ><i class="fa fa-pencil"></i> Редактировать группу</a>
 								{else}
-									<a href="{url module=ProductsGroupAdmin id=null}" class="btn btn-sm btn-flat btn-primary" data-toggle="tooltip" title="Создать группу товара"><i class="fa fa-plus"></i> Создать группу</a>
+									<a href="{url module=ProductsGroupAdmin id=null}" class="btn btn-sm btn-flat btn-primary"><i class="fa fa-plus"></i> Создать группу</a>
 								{/if}
 							</div>
 							<div class="col-lg-12"><h4><b>Дополнительные параметры товара для группы</b></h4></div>

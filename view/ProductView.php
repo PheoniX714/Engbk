@@ -37,6 +37,7 @@ class ProductView extends View
 		// Автозаполнение имени для формы комментария
 		if(!empty($this->user))
 			$this->templates->assign('comment_name', $this->user->name);
+			$this->templates->assign('comment_rating', 5);
 
 		// Принимаем комментарий
 		if ($this->request->method('post') && $this->request->post('comment'))
@@ -44,11 +45,16 @@ class ProductView extends View
 			$comment = new stdClass;
 			$comment->name = $this->request->post('name');
 			$comment->text = $this->request->post('text');
+			$rating = $this->request->post('rating', 'integer');
 			$captcha_code =  $this->request->post('captcha_code', 'string');
+			
+			if(in_array(intval($rating), array(1,2,3,4,5)))
+				$comment->rating = $rating;
 			
 			// Передадим комментарий обратно в шаблон - при ошибке нужно будет заполнить форму
 			$this->templates->assign('comment_text', $comment->text);
 			$this->templates->assign('comment_name', $comment->name);
+			$this->templates->assign('comment_rating', $comment->rating);
 			
 			// Проверяем капчу и заполнение формы
 			if ($_SESSION['captcha_code'] != $captcha_code || empty($captcha_code))
@@ -76,7 +82,7 @@ class ProductView extends View
 				$comment_id = $this->comments->add_comment($comment);
 				
 				// Отправляем email
-				$this->notify->email_comment_admin($comment_id);				
+				$this->notify->email_comment_admin($comment_id);		
 				
 				// Приберем сохраненную капчу, иначе можно отключить загрузку рисунков и постить старую
 				unset($_SESSION['captcha_code']);
@@ -145,7 +151,7 @@ class ProductView extends View
 			$this->templates->assign('related_products', $related_products);
 		}
 
-		#$comments = $this->comments->get_comments(array('type'=>'product', 'object_id'=>$product->id, 'approved'=>1, 'ip'=>$_SERVER['REMOTE_ADDR']));
+		$comments = $this->comments->get_comments(array('type'=>'product', 'object_id'=>$product->id, 'approved'=>1, 'ip'=>$_SERVER['REMOTE_ADDR']));
 		
 		//Перевод товара
 		$language_id = $_SESSION['lang']->id;
@@ -178,6 +184,12 @@ class ProductView extends View
 		// И передаем его в шаблон
 		$this->templates->assign('product', $product);
 		$this->templates->assign('comments', $comments);
+		
+		$answers = array();
+		foreach($comments as $comment){
+			$answers[$comment->id] = $this->comments->get_answer($comment->id);
+		}
+		$this->templates->assign('answers', $answers);
 		
 		// Категория и бренд товара
 		$product->categories = $this->categories->get_categories(array('product_id'=>$product->id));

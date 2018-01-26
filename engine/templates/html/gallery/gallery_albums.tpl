@@ -66,9 +66,9 @@
 							<b><a href="{url module=GalleryAlbumAdmin id=$a->id}">{$a->name|escape}</a></b>
 						</td>
 						<td class="actions-cell">
-							<a href="{url module=GalleryAlbumAdmin id=$a->id }" class="btn btn-sm btn-flat btn-primary btn-flat btn-actions" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></a>&nbsp;
-							<button type="button" class="btn btn-flat {if !$a->visible}btn-default{else}btn-success active{/if} lang-enable" data-toggle="tooltip" title="Показывать на сайте"><i class="fa fa-lightbulb-o"></i></button>&nbsp;
-							<button type="button" class="btn btn-flat btn-danger delete" data-toggle="tooltip" title="Удалить"><i class="fa fa-trash-o"></i></button>
+							<a href="{url module=GalleryAlbumAdmin id=$a->id }" class="btn btn-sm btn-flat btn-primary btn-flat btn-actions"><i class="fa fa-pencil"></i></a>&nbsp;
+							<button type="button" class="btn btn-flat {if !$a->visible}btn-default{else}btn-success active{/if} lang-enable"><i class="fa fa-lightbulb-o"></i></button>&nbsp;
+							<button type="button" class="btn btn-flat btn-danger delete"><i class="fa fa-trash-o"></i></button>
 						</td>
 					</tr>
 					{/foreach}

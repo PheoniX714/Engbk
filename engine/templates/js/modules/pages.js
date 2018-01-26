@@ -40,8 +40,8 @@
 	});
 	
 	$("button.delete").on("click", function(){
-		$('#functional-table tr td input[type="checkbox"][name*="check"]').prop('checked', false);
-		$(this).closest("#functional-table tr").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+		$('.sortable-list li input[type="checkbox"][name*="check"]').prop('checked', false);
+		$(this).closest(".sortable-list li").find('input[type="checkbox"][name*="check"]').prop('checked', true);
 		$(this).closest("form").find('select[name="action"] option[value=delete]').prop('selected', true);
 		$(this).closest("form").submit();
 		return false;

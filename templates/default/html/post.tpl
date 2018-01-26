@@ -1,12 +1,11 @@
 {$og_type="article" scope="parent"}
 {$og_image="{$config->root_url}/files/uploads/{$post->image}" scope="parent"}
-{include file='slider.tpl'}
 
 <section class="news-page">
 	<div class="container">
 
 		<div id="path">
-			<a href="./">Главная</a> / <a href="./news">Публикации</a> / {$post->name|escape}
+			<a href="./">{if $language->id == 2}Головна{elseif $language->id == 4}Home{else}Главная{/if}</a> / <a href="./news">{if $language->id == 2}Блог{elseif $language->id == 4}Blog{else}Блог{/if}</a> / {$post->name|escape}
 		</div>
 		
 		<div class="clear"></div>
@@ -20,6 +19,5 @@
 			</div>
 		</div>
 		
-		{include file='pagination.tpl'}
 	</div>
 </section>

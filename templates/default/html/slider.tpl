@@ -1,4 +1,4 @@
-<section id="slider" class="slider hidden-xs">
+<div id="slider" class="slider">
 	<div class="slider-box">
 		<div id="iview">
 			{get_slides var=slides}
@@ -9,4 +9,4 @@
 			{/if}
 		</div>
 	</div>
-</section>
+</div>

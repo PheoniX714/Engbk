@@ -73,10 +73,10 @@
 							{/if}
 						</td>
 						<td>
-							<button class="cents btn btn-sm btn-flat {if $c->cents == 2}btn-warning active{else}btn-default{/if} btn-actions" data-toggle="tooltip" title="Отображение копеек" ><i class="fa fa-money"></i></button>&nbsp;
-							<button class="enable btn btn-sm btn-flat {if !$c->enabled}btn-default{else}btn-success active{/if} btn-actions" data-toggle="tooltip" title="Отображение на сайте" ><i class="fa fa-lightbulb-o"></i></button>&nbsp;
+							<button class="cents btn btn-sm btn-flat {if $c->cents == 2}btn-warning active{else}btn-default{/if} btn-actions" ><i class="fa fa-money"></i></button>&nbsp;
+							<button class="enable btn btn-sm btn-flat {if !$c->enabled}btn-default{else}btn-success active{/if} btn-actions" ><i class="fa fa-lightbulb-o"></i></button>&nbsp;
 							{if !$c@first}
-								<button class="delete btn btn-sm btn-flat btn-danger btn-actions" data-toggle="tooltip" title="Удалить" ><i class="fa fa-trash-o"></i></button>
+								<button class="delete btn btn-sm btn-flat btn-danger btn-actions"><i class="fa fa-trash-o"></i></button>
 							{/if}
 						</td>
 					</tr>

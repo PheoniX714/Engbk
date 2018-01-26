@@ -166,16 +166,16 @@
 									<div class="image">
 										<img src="/files/gallery/{$album->created|date_format:'%Y'}/{$image->filename}">
 										<div class="image-check"><input type="checkbox" name="check[]" class="im-check" value="{$image->id|escape}"></div>
-										{if $image->as_preview}<div class="as-preview-icon" data-toggle="tooltip" title="Изображение указано как обложка альбома"><i class="fa fa-star"></i></div>{/if}
+										{if $image->as_preview}<div class="as-preview-icon"><i class="fa fa-star"></i></div>{/if}
 										<div class="image-controls">
 											<input name="positions[]" type="hidden" value="{$image->id|escape}" class="form-control" />
 											<div class="move_zone"><i class="fa fa-arrows"></i></div>
 											<div class="as-preview-box">
 												<input type="radio" class="as-preview" id="as-preview-{$image->id|escape}" name="as-preview" value="{$image->id|escape}" {if $image->as_preview}checked{/if} />
-												<label for="as-preview-{$image->id|escape}" data-toggle="tooltip" title="Установить как обложку альбома"><i class="fa fa-star"></i></label>
+												<label for="as-preview-{$image->id|escape}"><i class="fa fa-star"></i></label>
 											</div>
-											<div class="open-image"><a href="/files/gallery/{$album->created|date_format:'%Y'}/{$image->filename}" data-toggle="tooltip" title="Открыть изображение в новом окне" target="__blank"><i class="fa fa-eye"></i></a></div>
-											<div class="delete-image" data-toggle="tooltip" title="Удалить"><i class="fa fa-trash"></i></div>
+											<div class="open-image"><a href="/files/gallery/{$album->created|date_format:'%Y'}/{$image->filename}" target="__blank"><i class="fa fa-eye"></i></a></div>
+											<div class="delete-image"><i class="fa fa-trash"></i></div>
 										</div>
 									</div>
 								</div>

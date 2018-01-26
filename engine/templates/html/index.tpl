@@ -109,6 +109,7 @@
 			<li {if $sm_item == 'news'}class="active"{/if}><a href="./index.php?module=NewsAdmin"><i class="fa fa-newspaper-o"></i> Список новостей</a></li>
           </ul>
         </li>
+		<li class="{if $sm_groupe == 'comments'}active{/if}"><a href="./index.php?module=CommentsAdmin"><i class="fa fa-comment"></i> Комментарии</a></li>
 		<li class="{if $sm_groupe == 'slider'}active{/if}"><a href="./index.php?module=SliderAdmin"><i class="fa fa-picture-o"></i> Слайдер</a></li>
 		<!-- <li class="treeview {if $sm_groupe == 'gallery'}active{/if}">
           <a href="#">

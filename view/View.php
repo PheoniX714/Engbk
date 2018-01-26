@@ -47,7 +47,10 @@ class View extends Engine
 				$lang = $this->languages->get_language($lang_id);
 			}
 			$_SESSION['lang'] = $lang;
-
+			
+			if($_SESSION['lang'])
+				$_SESSION['currency_id'] = intval($lang->currency_id);
+				
 			$this->templates->assign('language', $lang);
 			
 			// Все валюты
@@ -55,25 +58,6 @@ class View extends Engine
 			
 			$this->categories_tree = $this->categories->get_categories_tree();
 			$this->templates->assign('categories_tree',	$this->categories_tree);
-			
-			foreach($this->categories_tree as $cat){
-				if($cat->id == 9){
-					$this->templates->assign('categories_women',	$cat->subcategories);
-					$wc = $cat->children;
-				}
-				if($cat->id == 1){
-					$this->templates->assign('categories_men',	$cat->subcategories);
-					$mc = $cat->children;
-				}
-				if($cat->id == 4)
-					$this->templates->assign('categories_1',	array($cat));
-				if($cat->id == 6)
-					$this->templates->assign('categories_2',	array($cat));
-			}
-			
-			$this->templates->assign('categories_tree',	$this->categories_tree);
-			$this->templates->assign('mc',	$mc);
-			$this->templates->assign('wc',	$wc);
 			
 			// Выбор текущей валюты
 			if($currency_id = $this->request->get('currency_id', 'integer'))
@@ -85,7 +69,6 @@ class View extends Engine
 			// Берем валюту из сессии
 			if(isset($_SESSION['currency_id']))
 				$this->currency = $this->money->get_currency($_SESSION['currency_id']);
-			// Или первую из списка
 			else
 				$this->currency = reset($this->currencies);
 					
@@ -161,6 +144,16 @@ class View extends Engine
 			{
 				// id выбраных товаров
 				$products_ids = array_keys($products);
+					
+				// Выбираем варианты товаров
+				$variants = $this->variants->get_variants(array('product_id'=>$products_ids, 'in_stock'=>true));
+				
+				// Для каждого варианта
+				foreach($variants as &$variant)
+				{
+					// добавляем вариант в соответствующий товар
+					$products[$variant->product_id]->variants[] = $variant;
+				}
 				
 				// Выбираем изображения товаров
 				$images = $this->products->get_images(array('product_id'=>$products_ids));
@@ -169,13 +162,14 @@ class View extends Engine
 	
 				foreach($products as &$product)
 				{
+					if(isset($product->variants[0]))
+						$product->variant = $product->variants[0];
 					if(isset($product->images[0]))
 						$product->image = $product->images[0];
 				}				
 			}
-
+						
 			$smarty->assign($params['var'], $products);
-			
 		}
 	}
 		
@@ -195,6 +189,16 @@ class View extends Engine
 			{
 				// id выбраных товаров
 				$products_ids = array_keys($products);
+				
+				// Выбираем варианты товаров
+				$variants = $this->variants->get_variants(array('product_id'=>$products_ids, 'in_stock'=>true));
+				
+				// Для каждого варианта
+				foreach($variants as &$variant)
+				{
+					// добавляем вариант в соответствующий товар
+					$products[$variant->product_id]->variants[] = $variant;
+				}
 				
 				// Выбираем изображения товаров
 				$images = $this->products->get_images(array('product_id'=>$products_ids));

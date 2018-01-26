@@ -48,7 +48,18 @@ class LanguagesAdmin extends Engine
 
 		// Отображение
 	  	$languages = $this->languages->get_languages();
+		
+		$currencies = array();
+		$cur = $this->money->get_currencies();
+		foreach($cur as $c){
+			$currencies[$c->id] = $c;
+		}
+		foreach($languages as $k=>$l){
+			$languages[$k]->currency_id = $currencies[$l->currency_id]->name;
+		}
+		
 	 	$this->templates->assign('languages', $languages);
+		
 		return $this->templates->fetch('settings/languages.tpl');
 	}
 }

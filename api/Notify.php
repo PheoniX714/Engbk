@@ -149,7 +149,7 @@ class Notify extends Engine
 			$this->templates->assign('comment', $comment);
 
 			// Отправляем письмо
-			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/email_comment_admin.tpl');
+			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/emails/email_comment_admin.tpl');
 			$subject = $this->templates->get_var('subject');
 			$this->email($this->settings->comment_email, $subject, $email_template, $this->settings->notify_from_email);
 	}
@@ -179,7 +179,7 @@ class Notify extends Engine
 			$this->templates->assign('feedback', $feedback);
 
 			// Отправляем письмо
-			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/email_feedback_admin.tpl');
+			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/emails/email_feedback_admin.tpl');
 			$subject = $this->templates->get_var('subject');
 			$this->email($this->settings->comment_email, $subject, $email_template, "$feedback->name <$feedback->email>", "$feedback->name <$feedback->email>");
 	}

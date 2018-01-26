@@ -55,7 +55,7 @@ class Currency extends Engine
 	{
 		if(!empty($id) && is_integer($id) && isset($this->currencies[$id]))
 			return $this->currencies[$id];
-			
+		
 		if(!empty($id) && is_string($id))
 		{
 			foreach($this->currencies as $currency)

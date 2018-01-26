@@ -1,10 +1,8 @@
-{include file='slider.tpl'}
-
 <section class="news-page">
 	<div class="container">
 
 		<div id="path">
-			<a href="./">Главная</a> / Публикации
+			<a href="./">{if $language->id == 2}Головна{elseif $language->id == 4}Home{else}Главная{/if}</a> / {if $language->id == 2}Блог{elseif $language->id == 4}Blog{else}Блог{/if}
 		</div>
 		
 		<div class="clear"></div>
@@ -20,7 +18,7 @@
 				<div class="news-text">
 					<h2><a href="news/{$post->url}">{$post->name|escape}</a></h2>
 					<div class="post-annotation">{$post->annotation}</div>
-					<div class="more"><a href="news/{$post->url}">Подробнее</a></div>
+					<div class="more"><a href="news/{$post->url}">{if $language->id == 2}Детальніше{elseif $language->id == 4}More{else}Подробнее{/if}</a></div>
 				</div>
 			</div>
 		</div>

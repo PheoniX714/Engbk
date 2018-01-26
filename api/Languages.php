@@ -12,7 +12,7 @@ class Languages extends Engine
 			$visible_filter = $this->db->placehold('AND visible = ?', intval($filter['visible']));
 		
 		// Выбираем из базы языки
-		$query = "SELECT id, name, code, position, visible FROM __languages WHERE 1 $visible_filter ORDER BY position";
+		$query = "SELECT id, name, code, position, visible, currency_id FROM __languages WHERE 1 $visible_filter ORDER BY position";
 		$this->db->query($query);
 		
 		$languages = $this->db->results();
@@ -27,7 +27,7 @@ class Languages extends Engine
 		else
 			$where = $this->db->placehold(' WHERE id=? ', intval($id));
 		
-		$query = "SELECT id, name, code, position, visible FROM __languages $where LIMIT 1";
+		$query = "SELECT id, name, code, position, visible, currency_id FROM __languages $where LIMIT 1";
 		$this->db->query($query);
 		
 		$language = $this->db->result();

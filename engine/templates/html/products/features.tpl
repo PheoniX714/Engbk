@@ -51,8 +51,8 @@
 					  <!-- General tools such as edit or delete-->
 					  <div class="tools">
 						<a href="{url module=FeatureAdmin id=$feature->id return=$smarty.server.REQUEST_URI}" class="btn btn-primary btn-sm btn-flat"><i class="fa fa-pencil"></i></a>
-						<button class="btn btn-sm {if !$feature->in_filter}btn-default{else}btn-success enbl{/if} in_filter btn-flat" title="Использовать в фильтре"><i class="fa fa-filter"></i></button>
-						<button class="btn btn-sm btn-danger delete btn-flat" title="Удалить"><i class="fa fa-trash-o"></i></button>
+						<button class="btn btn-sm {if !$feature->in_filter}btn-default{else}btn-success enbl{/if} in_filter btn-flat" ><i class="fa fa-filter"></i></button>
+						<button class="btn btn-sm btn-danger delete btn-flat" ><i class="fa fa-trash-o"></i></button>
 					  </div>
 					</li>
 					{/foreach}
