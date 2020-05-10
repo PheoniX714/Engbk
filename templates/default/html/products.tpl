@@ -1,166 +1,219 @@
-{$add_script = "
-	<script>
-	$(function() {
-	$( '#slider-range' ).slider({
-	range: true,
-	min: {$min_price},
-	max: {$max_price},
-	values: [ {$filter_min_price}, {$filter_max_price} ],
-	slide: function( event, ui ) {
-	$( '#price_range' ).val( ui.values[ 0 ] + ' грн' + ' - ' + ui.values[ 1 ] + ' грн' );
-	}
-	});
-	$( '#price_range' ).val( $( '#slider-range' ).slider( 'values', 0 ) + ' грн' +
-	' - ' + $( '#slider-range' ).slider( 'values', 1 ) + ' грн' );
-	});
-	</script>
-" scope="parent"}
+{* Список товаров *}
 
-<section id="products" class="catalog-page">
-	<div class="container">
-		<div class="row">
-			<div id="path" class="col-lg-12">
-				<a href="./">{if $language->id == 2}Головна{elseif $language->id == 4}Home{else}Главная{/if}</a> {if $category}
-				{foreach from=$category->path item=cat} / <a href="catalog/{$cat->url}">{if $cat->visible_name}{$cat->visible_name|escape}{else}{$cat->name|escape}{/if}</a>{/foreach}
-				{if $brand}/ <a href="catalog/{$cat->url}/{$brand->url}">{$brand->name|escape}</a>{/if}
-				{elseif $brand}/ <a href="brands/{$brand->url}">{$brand->name|escape}</a>
-				{elseif $keyword}/ {if $language->id == 2}Пошук{elseif $language->id == 4}Search{else}Поиск{/if} {$keyword|escape}{/if}
-			</div>
-			
-			{if $keyword}
-			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-			{if $products|count>2}
-				<div class="sort pull-right">
-				<select onchange="location = this.value+'#products';">
-					<option value="{url sort=position}" {if $sort=='position'} selected{/if}>{if $language->id == 2}Сортировать по умолчанию{elseif $language->id == 4}Sort by default{else}Сортировать по умолчанию{/if}</option>
-					<option value="{url sort=name}" {if $sort=='name'} selected{/if}>{if $language->id == 2}Назвою{elseif $language->id == 4}Name{else}Названию{/if}</option>
-					<option value="{url sort=price_asc}" {if $sort=='price_asc'} selected{/if}>{if $language->id == 2}Від дорогих до дешевих{elseif $language->id == 4}From expensive to cheap{else}От дорогих к дешевым{/if}</option>
-					<option value="{url sort=price_desc}" {if $sort=='price_desc'} selected{/if}>{if $language->id == 2}Від дешевих до дорогих{elseif $language->id == 4}From cheap to expensive{else}От дешевых к дорогим{/if}</option>
-				</select>
-				</div>
-			{/if}
-			</div>
-			
-			{if $products}
-			<div class="products-list">
-			{foreach $products as $product}
-			<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">{include file='tpl_products_block.tpl'}</div>
-			{/foreach}
-			</div>
-			
-			<div class="col-lg-12">
-			{include file='pagination.tpl'}
-			</div>
-			
-			{else}<h4 style='padding:50px 20px;'>Товаров по запросу "{$keyword|escape}" не найдено!</h4>{/if}
+{* Канонический адрес страницы *}
+{if $category && $brand}
+{$canonical="/catalog/{$category->url}/{$brand->url}" scope='root'}
+{elseif $category}
+{$canonical="/catalog/{$category->url}" scope='root'}
+{elseif $brand}
+{$canonical="/brands/{$brand->url}" scope='root'}
+{elseif $keyword}
+{$canonical="/products?keyword={$keyword|escape}" scope='root'}
+{else}
+{$canonical="/products" scope='root'}
+{/if}
 
-			{else}
-			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-				{if $features}
-				<form method="get" action="{$smarty.server.SCRIPT_URL}#products">
-					<div id="features-list" class="hidden-xs">
-						
-						<input type="text" name="price_range" id="price_range" value="" readonly>
-						
-						
-						<div id="slider-range"></div>
-						
-						<div class="filter-button">
-							<input type="submit" value="{if $language->id == 2}Фільтрувати{elseif $language->id == 4}Filter{else}Фильтровать{/if}">
-						</div>
-					
-						{foreach $features as $f}
-						{if $f->language_id == $language->id} 
-						<div class="feature_name" data-feature="{$f->id}">
-							{$f->name}
-						</div>
-						<div class="feature_values">
-							<ul>
-								{foreach $f->options as $k=>$o}
-								<li>
-									<label>
-										<input type="checkbox" name="{$f->id}[]" onchange="submit(this.form);" {if $filter_features.{$f->id} && in_array($o->value,$filter_features.{$f->id})}checked="checked"{/if} value="{$o->value|escape}" />{$o->value|escape}
-									</label>
-								</li>
-								{/foreach}
-							</ul>
-						</div>
-						{/if}
-						{/foreach}
-						
-						<div class="feature_name">
-							{if $language->id == 2}Кольори{elseif $language->id == 4}Colors{else}Цвета{/if}
-						</div>
-						<div class="feature_values">
-							<ul class="colors-filter">
-								{foreach $products_colors as $color}
-								{if $color}
-								<li>
-									<label {if $filter_colors && in_array($color, $filter_colors)}class="sel"{/if}>
-										<input type="checkbox" name="colors[]" onchange="submit(this.form);" value="{$color}" {if $filter_colors && in_array($color, $filter_colors)}checked="checked"{/if} /><span style="background:#{$color};"></span><span class="check"><i class="fa fa-check" aria-hidden="true"></i></span>
-									</label>
-								</li>
-								{/if}
-								{/foreach}
-							</ul>
-						</div>
-					</div>
-				</form>
-				{else}
-				<div class="left-categories">
-					{function name=left_menu}
-					{if $categories}
-					<ul class="{if $level==0}tree {/if}menu-level menu-level-{$level}">
-					{foreach $categories as $c}
-						{* Показываем только видимые категории *}
-						{if $c->visible}
-						<li>
-							<a {if $category->id == $c->id}class="selected"{/if} href="catalog/{$c->url}" data-category="{$c->id}">{if $c->visible_name}{$c->visible_name|escape}{else}{$c->name|escape}{/if}</a>
-							{left_menu categories=$c->subcategories level=$level+1}
-						</li>
-						{/if}
-					{/foreach}
-					</ul>
-					{/if}
-					{/function}
-					
-				</div>			
-				{/if}
-			</div>
-			<div class="col-lg-9 col-md-8 col-sm-9 col-xs-12">
-				<div class="row">
-					<div class="col-lg-12 col-xs-12">
-					{if $products|count>2}
-						<div class="sort pull-right">
-						<select onchange="location = this.value+'#products';">
-							<option value="{url sort=position}" {if $sort=='position'} selected{/if}>{if $language->id == 2}Сортировать по умолчанию{elseif $language->id == 4}Sort by default{else}Сортировать по умолчанию{/if}</option>
-							<option value="{url sort=name}" {if $sort=='name'} selected{/if}>{if $language->id == 2}Назвою{elseif $language->id == 4}Name{else}Названию{/if}</option>
-							<option value="{url sort=price_asc}" {if $sort=='price_asc'} selected{/if}>{if $language->id == 2}Від дорогих до дешевих{elseif $language->id == 4}From expensive to cheap{else}От дорогих к дешевым{/if}</option>
-							<option value="{url sort=price_desc}" {if $sort=='price_desc'} selected{/if}>{if $language->id == 2}Від дешевих до дорогих{elseif $language->id == 4}From cheap to expensive{else}От дешевых к дорогим{/if}</option>
-						</select>
-						</div>
-					{/if}
-					</div>
-					
-					{if $products}
-					<div class="products-list">
-					{foreach $products as $product}
-					<div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">{include file='tpl_products_block.tpl'}</div>
-					{/foreach}
-					</div>
-					
-					<div class="col-lg-12 col-md-12 col-xs-12">
-					{include file='pagination.tpl'}
-					</div>
-					
-					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						{$category->description}
-					</div>
-					
-					{else}<h4 style='padding:50px 20px;'>{if $language->id == 2}Товарів нема{elseif $language->id == 4}No products{else}Товаров нет{/if}</h4>{/if}
-				</div>
-			</div>
-			{/if}
+
+<!-- Хлебные крошки 
+<div class="col-md-12" id="path">
+	<a href="./">Главная</a>
+	{foreach $category->path as $cat}
+	- <a href="catalog/{$cat->url}">{$cat->name|escape}</a>
+	{/foreach}
+	{if $brand}
+	- <a href="catalog/{$cat->url}/{$brand->url}">{$brand->name|escape}</a>
+	{/if}
+	{if $product->name}
+	-  {$product->name|escape}
+	{/if}
+</div>
+ Хлебные крошки #End /-->
+
+{if $category->id == 2 or  $category->id == 6 or  $category->id == 7 or  $category->id == 8 or  $category->id == 34}
+{$pp = [35,36,37,38]}
+	<div class="row categories-title">
+		<div class="col-md-12">
+			<h1>{$category->name|escape}</h1>
 		</div>
 	</div>
-</section>
+	<div class="row">
+		<div class="col-md-12 categories-list">
+		{foreach $category->subcategories as $sc}
+		{if $sc->visible}
+			<div class="subcat-box">
+				{if $sc->image}<div class="subcat-img"><a href="{if in_array($sc->id, $pp)}{else}/catalog{/if}/{$sc->url}"><img src="/files/category/{$sc->image}"></a></div>{/if}
+				<div class="subcat-title"><a href="{if in_array($sc->id, $pp)}{else}/catalog{/if}/{$sc->url}" {if $sc->id == 13}style="font-size:10px;"{/if}>{$sc->name}</a></div>
+			</div>
+		{/if}
+		{/foreach}
+		</div>
+	</div>
+{else}
+
+{if $keyword}
+<div class="row categories-title">
+	<div class="col-md-12">
+		<h1>Поиск: {$keyword|escape}</h1>
+	</div>
+</div>
+{/if}
+
+{if $category->image}
+<div class="category-image">
+<img src="files/category/{$category->image}">
+</div>
+{/if}
+{if $category->name}
+<h1 class="category-name">
+{$category->name}
+</h1>
+{/if}
+{if $category->description}
+<div class="category-text">
+{* Описание категории *}
+{$category->description}
+</div>
+{/if}
+
+{if $category->id == 30}
+<div class="p-calculators" style="margin:20px 0">
+{literal}
+<script type="text/javascript">
+function changeText0(){
+var rezultat = 1;
+rezultat *= (Math.PI * (Math.pow(parseFloat(document.getElementById('d').value), 2) / 100) ) / 4;
+rezultat *= parseFloat(document.getElementById('p').value);
+document.getElementById('rezultat').innerHTML = rezultat.toFixed(3);
+}
+</script>
+{/literal}
+<form onsubmit="return false;" oninput="changeText0()">
+<p><span>Диаметр поршня d, мм</span> <input id="d" type="number"></p>
+<p><span>Давление системы P, ат (обычно 6 ат)</span> <input id="p" type="number"></p>
+<p><span>Сила давления F, кгc:</span> <output id="rezultat"></output></p>
+</form>
+
+{literal}
+<script type="text/javascript">
+function changeText1(){
+var rezultat1 = 1;
+rezultat1 *= Math.sqrt( (4 * parseFloat(document.getElementById('f1').value) ) / (Math.PI * parseFloat(document.getElementById('p1').value) ) );
+document.getElementById('rezultat1').innerHTML = 10*rezultat1.toFixed(3);
+}
+</script>
+{/literal}
+<form onsubmit="return false;" oninput="changeText1()">
+<p><span>Сила давления F, кгc</span> <input id="f1" type="number"></p>
+<p><span>Давление системы P, ат (обычно 6 ат)</span> <input id="p1" type="number"></p>
+<p><span>Диаметр поршня d, мм:</span> <output id="rezultat1"></output></p>
+</form>
+
+</div>
+{/if}
+<!--Каталог товаров-->
+{if $products}
+
+<div class="row products-category">
+	
+	<div class="col-md-12">
+		<div class="row products">
+			<table id="p-list" class="table table-striped">
+            <tbody>
+			  {if $features}
+			  <tr class="t-header">
+                <td colspan="4">
+					<div id="features">
+						{foreach from=$features key=key item=f name=ft}
+							{foreach from=$f->options item=o name=op}
+								<a href="{url params=[$f->id=>$o->value, page=>null]}#p-list" {if $smarty.get[$f@key]== $o->value}class="selected"{/if}>{$o->value|escape}</a>{if !$smarty.foreach.op.last} | {/if}
+							{/foreach}
+						{/foreach}
+					</div>
+				</td>
+              </tr>
+			  {/if}
+			{foreach $products as $product}
+              <tr>
+				<form class="variants" action="/cart">
+                <td class="id{$product->id} nb-l p-name">{if $product->featured}<a href="products/{$product->url}">{$product->name}</a>{else}{$product->name}{/if}</td>
+                <td class="price">
+					{foreach $product->variants as $v}
+					<input id="variants_{$v->id}" name="variant" value="{$v->id}" type="radio" class="variant_radiobutton" {if $v@first}checked{/if} style="display:none;" />
+					{if $v->compare_price > 0}<span class="compare_price">{$v->compare_price|convert}</span>{/if}
+					<span class="id{$product->id} price">{$v->price|convert} <span class="currency">{$currency->sign|escape}</span></span>
+					{/foreach}
+				</td>
+				<td class="amount">
+					<div class="am">
+						<input type="button" value="-" class="button add1" onclick="javascript:this.form.amount.value= this.form.amount.value<=1 ? 1 :parseInt(this.form.amount.value)-1 ;">
+						<input type="text" class="amount-input" name="amount" value="1">
+						<input type="button" value="+" class="button add2" onclick="javascript:this.form.amount.value= this.form.amount.value>=100 ? 100 :parseInt(this.form.amount.value)+1 ;">
+					</div>
+				</td>
+                <td class="to-cart nb-r"><input type="submit" class="button cart-but" value="в корзину" data-result-text="добавить еще"/></td>
+				</form>
+				{/foreach}
+              </tr>
+			
+			  <tr class="pagination-tr">
+                <td colspan="4">{include file='pagination.tpl'}&nbsp;</td>
+              </tr>
+			</tbody>
+          </table>
+		</div>
+	</div>
+<!-- Список товаров (The End)-->
+
+{if $category->url == 'poliamid'}
+{literal}
+<!-- Google Code for &#1055;&#1086;&#1083;&#1080;&#1072;&#1084;&#1080;&#1076; Conversion Page -->
+<script type="text/javascript">
+/* <![CDATA[ */
+var google_conversion_id = 978369648;
+var google_conversion_language = "en";
+var google_conversion_format = "3";
+var google_conversion_color = "ffffff";
+var google_conversion_label = "6aN9CJrLknUQ8PjC0gM";
+var google_remarketing_only = false;
+/* ]]> */
+</script>
+<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
+</script>
+<noscript>
+<div style="display:inline;">
+<img height="1" width="1" style="border-style:none;" alt="" src="//www.googleadservices.com/pagead/conversion/978369648/?label=6aN9CJrLknUQ8PjC0gM&amp;guid=ON&amp;script=0"/>
+</div>
+</noscript> 
+{/literal}
+{elseif $category->url == 'polipropilen'}
+
+{literal}
+<!-- Google Code for &#1055;&#1086;&#1083;&#1080;&#1087;&#1088;&#1086;&#1087;&#1080;&#1083;&#1077;&#1085; Conversion Page -->
+<script type="text/javascript">
+/* <![CDATA[ */
+var google_conversion_id = 978369648;
+var google_conversion_language = "en";
+var google_conversion_format = "3";
+var google_conversion_color = "ffffff";
+var google_conversion_label = "tI4WCP2-mHUQ8PjC0gM";
+var google_remarketing_only = false;
+/* ]]> */
+</script>
+<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
+</script>
+<noscript>
+<div style="display:inline;">
+<img height="1" width="1" style="border-style:none;" alt="" src="//www.googleadservices.com/pagead/conversion/978369648/?label=tI4WCP2-mHUQ8PjC0gM&amp;guid=ON&amp;script=0"/>
+</div>
+</noscript> 
+{/literal}
+
+{/if}
+
+</div>
+{else}
+<div class="col-md-12 no-products">Товары не найдены</div>
+{/if}
+
+{/if}
+<!--Каталог товаров (The End)-->

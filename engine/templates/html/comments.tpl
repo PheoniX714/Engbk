@@ -1,15 +1,15 @@
 {* Title *}
-{$meta_title='Отзывы' scope=parent}
-{$sm_groupe = 'comments' scope=parent}
+{$meta_title='Отзывы' scope='root'}
+{$sm_groupe = 'comments' scope='root'}
 {$page_additional_css = '
 	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-' scope=parent}
+' scope='root'}
 {$page_additional_js = '
 	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
 	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
 	<script src="./templates/js/jquery.sticky.js"></script>
 	<script src="./templates/js/modules/comments.js"></script>
-' scope=parent}
+' scope='root'}
 
 <section class="content-header">
 	<h1>Комментарии<small>Модерация комментариев и добавление ответов</small></h1>

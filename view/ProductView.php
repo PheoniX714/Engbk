@@ -13,7 +13,10 @@ class ProductView extends View
 			return false;
 
 		// Выбираем товар из базы
-		$product = $this->products->get_product((string)$product_url);
+		$translation = $this->products->get_product_translation((string)$product_url);
+		$product = $this->products->get_product(intval($translation->product_id));
+		$product = (object)array_merge((array)$product, (array)$translation);
+		
 		if(empty($product) || (!$product->visible && empty($_SESSION['admin'])))
 			return false;
 		
@@ -90,27 +93,6 @@ class ProductView extends View
 			}			
 		}
 		
-		// Группа товаров
-		$product_group = $this->products->get_group_product(intval($product->id));
-		
-		if($product_group){
-			$group_products_ids = array();
-			$group_products = array();
-			foreach($this->products->get_group_products($product_group->group_id) as $p)
-			{
-				$group_products_ids[] = $p->product_id;
-				$group_products[$p->product_id] = null;
-			}
-			
-			if(!empty($group_products_ids))
-			{
-				foreach($this->products->get_products(array('id'=>$group_products_ids, 'category_id'=>'', 'visible'=>1)) as $p)
-					$group_products[$p->id] = $p;
-					
-				$this->templates->assign('group_products', $group_products);
-			}
-		}
-				
 		// Связанные товары
 		$related_ids = array();
 		$related_products = array();
@@ -153,44 +135,17 @@ class ProductView extends View
 
 		$comments = $this->comments->get_comments(array('type'=>'product', 'object_id'=>$product->id, 'approved'=>1, 'ip'=>$_SERVER['REMOTE_ADDR']));
 		
-		//Перевод товара
-		$language_id = $_SESSION['lang']->id;
-						
-		if($language_id > 1){
-			$translation = $this->products->get_product_translation(intval($product->id), intval($language_id));
-			
-			if(empty($translation)){
-				$translation = new stdClass;
-				$translation->name = '';
-				$translation->visible_name = '';
-				$translation->meta_title = '';
-				$translation->meta_keywords = '';
-				$translation->meta_description = '';
-				$translation->body = '';
-				$translation->annotation = '';
-			}
-			
-			if($translation){
-				$product->name = $translation->name;
-				$product->visible_name = $translation->visible_name;
-				$product->meta_title = $translation->meta_title;
-				$product->meta_keywords = $translation->meta_keywords;
-				$product->meta_description = $translation->meta_description;
-				$product->annotation = $translation->annotation;
-				$product->body = $translation->body;
-			}
-		}
 		
 		// И передаем его в шаблон
 		$this->templates->assign('product', $product);
 		$this->templates->assign('comments', $comments);
-		
-		$answers = array();
-		foreach($comments as $comment){
-			$answers[$comment->id] = $this->comments->get_answer($comment->id);
+		if(!empty($comments)){
+			$answers = array();
+			foreach($comments as $comment){
+				$answers[$comment->id] = $this->comments->get_answer($comment->id);
+			}
+			$this->templates->assign('answers', $answers);
 		}
-		$this->templates->assign('answers', $answers);
-		
 		// Категория и бренд товара
 		$product->categories = $this->categories->get_categories(array('product_id'=>$product->id));
 		#$this->templates->assign('brand', $this->brands->get_brand(intval($product->brand_id)));		

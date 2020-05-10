@@ -1,134 +1,176 @@
 {* Title *}
-{$meta_title='Заказы' scope=parent}
-{$sm_groupe='orders' scope=parent}
+{$meta_title='Заказы' scope='root'}
+{$sm_groupe='orders' scope='root'}
+{$sm_item = "`$status`" scope=root}
 
-{$page_additional_css = '
-	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-' scope=parent}
+{capture name=js}
+{literal}
+<script>
+	$(function () {
 
-{$page_additional_js = '
-	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/modules/orders.js"></script>
-' scope=parent}
-
-<section class="content-header">
-	<h1>{if $keyword}Поиск заказов{elseif $status===0}Новые заказы{elseif $status==1}Принятые заказы{elseif $status==2}Выполненные заказы{elseif $status==3}Удаленные заказы{/if}</h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li class="active">Заказы</li>
-	</ol>
-</section>
-
-<section class="content">
-  <div class="row">
-	<div class="col-lg-9">
-	<form id="list_form" method="post">
-	  <div class="box box-success"> 
-		<div class="box-header">
-		  <i class="fa fa-th-list"></i>
-		  <h3 class="box-title" style="line-height:1.5">{if $keyword}Найдено {/if}{if $orders_count}{$orders_count}{else}Нет{/if} заказ{$orders_count|plural:'':'ов':'а'}</h3>
-		</div>
-		<!-- /.box-header -->
-		<div class="box-body no-padding">
-			<input type="hidden" name="session_id" value="{$smarty.session.id}">   
-			<table class="table table-striped table-bordered table-hover tabled-view black-th orders-table" id="functional-table">
-                <tbody>
-				<tr>
-					<th class="checkbox-cell ln-inherit">
-						<input type="checkbox" class="minimal checkbox-toggle">
-					</th>
-					<th class="id-cell">ID</th>
-					<th>Заказ</th>
-					<th style="width:150px;">Оформлен</th>
-					<th style="width:150px;">На сумму</th>
-					<th class="actions-cell" style="width:100px;">Действия</th>
-				</tr>
-				{if $orders}
-                {foreach $orders as $order}
-				<tr>
-					<td class="checkbox-cell">
-						<input type="checkbox" class="minimal" name="check[]" value="{$order->id|escape}">
-					</td>
-					<td class="id-cell">
-						{$order->id|escape}
-					</td>
-					<td class="name-cell">
-						<a href="{url module=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}"> {$order->name|escape}</a> {if $order->paid}(<span class="text-green"><b>Оплачен</b></span>){/if}
-					</td>
-					<td class="date-cell">
-						{$order->date|date} в {$order->date|time}
-					</td>
-					<td class="price-cell m-align">
-						{$order->total_price|convert} {$currency->sign}
-					</td>
-					<td class="actions-cell" style="width:100px;">
-						<a href="{url module=OrderAdmin id=$order->id }" class="btn btn-sm btn-flat btn-primary btn-actions" ><i class="fa fa-pencil"></i></a>
-						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" ><i class="fa fa-trash-o"></i></button>
-					</td>
-						
-				</tr>
-				{/foreach}
-				{else}
-				<tr>
-					<td colspan="6">
-						Заказов не найдено
-					</td>
-				</tr>
-				{/if}
-				</tbody>
-			</table>
-			<div class="col-lg-12">
-			{include file='pagination.tpl'}
-			</div>
-		</div>
-		<!-- /.box-body -->		
-	  </div>
-	  <!-- /.box -->
-	  
-	  <div class="row">
-		<div class="form-group col-lg-3">
-			<select id="action" class="form-control" name="action">
-				{if $status!==0}<option value="set_status_0">В новые</option>{/if}
-				{if $status!==1}<option value="set_status_1">В принятые</option>{/if}
-				{if $status!==2}<option value="set_status_2">В выполненные</option>{/if}
-				<option value="delete">Удалить выбранные заказы</option>
-			</select>
-		</div>
+		$("#check_all").change(function() {
+			if($('#check_all').hasClass('checked')){
+				$('#list .custom-control-input:not(:disabled)').attr('checked', false);
+				$('#check_all').removeClass('checked');
+			}else{
+				$('#list .custom-control-input:not(:disabled)').attr('checked', true);
+				$('#check_all').addClass('checked');
+			}
+		});		
 		  
-		<div class="col-lg-2">
-			<button type="submit" class="btn btn-block btn-success btn-flat"value="Применить">Применить</button>
-		</div>
-	  </div>
-	  </form>
-	</div>
-	
-	<div class="col-lg-3">
-		<form method="get">
-		<label>Фильтр заказов по статусу:</label>
-		<select class="form-control" style="cursor:pointer;margin-bottom:20px;font-weight:bold;" onchange="if(this.value)window.location.href=this.value">
-			<option value="/engine/index.php?module=OrdersAdmin&status=0" {if $status==0}selected{/if}>Новые</option>
-			<option value="/engine/index.php?module=OrdersAdmin&status=1" {if $status==1}selected{/if}>Принятые</option>
-			<option value="/engine/index.php?module=OrdersAdmin&status=2" {if $status==2}selected{/if}>Выполненные</option>
-			<option value="/engine/index.php?module=OrdersAdmin&status=3" {if $status==3}selected{/if}>Удаленные</option>
-		</select>
+		$("button.delete").on("click", function(){
+			$('#list .todo-item input[type="checkbox"][name*="check"]').prop('checked', false);
+			$(this).closest("#list .todo-item").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+			$(this).closest("form").find('select[name="action"] option[value=delete]').prop('selected', true);
+			$(this).closest("form").submit();
+			return false;
+		});
 		
-		<label>Поиск по заказам:</label>
+		$("form").submit(function() {
+			if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
+				return false;	
+		});
 		
-		<div class="form-group">
-			<div class="input-group">
-				<input type="hidden" name="module" value="OrdersAdmin">
-				<input class="form-control" id="appendedInputButton" name="keyword" type="text" value="{$keyword|escape}">
-				<span class="input-group-btn">
-					<button class="btn btn-flat btn-success" type="submit" value=""><i class="fa fa-search"></i></button>
-				</span>
+	  });
+</script>
+{/literal}
+{/capture}
+
+<div id="contacts" class="page-layout simple left-sidebar-floating">
+
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-cart s-6"></i>
+					</span>
+					<span class="logo-text h4">{if $keyword}Поиск заказов{elseif $status===0}Новые заказы{elseif $status==1}Принятые заказы{elseif $status==2}Выполненные заказы{elseif $status==3}Удаленные заказы{/if}</span>
+				</div>
 			</div>
 		</div>
-		</form>
 	</div>
-	
-	<!-- /.col -->
-  </div>
-  <!-- /.row -->
-</section>
+
+	<div class="page-content-wrapper">
+
+		<div class="page-content p-4 p-sm-6">
+			<div class="row">
+				<div class="col-12 col-md-9 mb-5">
+				<form method="post">
+				<input type="hidden" name="session_id" value="{$smarty.session.id}">		
+					<div id="todo" class="card">
+						
+						<div id="list" class="todo-items w-100">
+							<div class="todo-item pr-2 pl-5 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center ">
+
+								<label id="check_all" class="custom-control custom-checkbox">
+									<input type="checkbox" class="custom-control-input" />
+									<span class="custom-control-indicator"></span>
+								</label>
+
+								<div class="info col px-4">
+
+									<div class="title">
+										Информация о заказе
+									</div>
+								</div>
+
+							</div>
+							{if $orders}
+							{foreach $orders as $order}
+							<div class="todo-item pr-2 pl-5 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center ">
+
+								<label class="custom-control custom-checkbox">
+									<input type="checkbox" class="custom-control-input" name="check[]" value="{$order->id}"/>
+									<span class="custom-control-indicator"></span>
+								</label>
+							
+								<div class="info col px-4 d-flex align-items-center justify-content-left">
+
+									<div class="title mr-4">
+										<a class="td-wh-none" href="{url module=OrderAdmin id=$order->id return=$smarty.server.REQUEST_URI}">#{$order->id|escape} {$order->name|escape}</a>
+									</div>
+								</div>
+								
+								<div class="info col-3 px-4 d-flex align-items-center justify-content-left">
+									{$order->date|date} в {$order->date|time}
+								</div>
+								
+								<div class="info col-3 px-4 d-flex align-items-center justify-content-left">
+									{$order->total_price|convert} {$currency->sign}
+								</div>
+
+								<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
+
+									<a href="{url module=OrderAdmin id=$order->id}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
+										<i class="icon icon-pencil text-blue"></i>
+									</a>
+									
+									<button type="button" class="btn btn-icon delete" data-toggle="tooltip" data-placement="bottom" title="Удалить">
+										<i class="icon icon-trash text-red"></i>
+									</button>
+
+								</div>
+							</div>
+							{/foreach}
+							{else}
+							<div class="card-body">
+								Заказов не найдено
+							</div>
+							{/if}
+						</div>
+						
+						<div class="card-footer py-6">
+							 <div class="row">
+								<div class="col-12 col-sm-4 col-md-3 mb-3 mb-sm-0">
+									<select id="action" class="form-control" name="action">
+										{if $status!==0}<option value="set_status_0">В новые</option>{/if}
+										{if $status!==1}<option value="set_status_1">В принятые</option>{/if}
+										{if $status!==2}<option value="set_status_2">В выполненные</option>{/if}
+										<option value="delete">Удалить выбранные заказы</option>
+									</select>
+								</div>
+								  
+								<div class="col-12 col-md-2 col-sm-6 col-xs-6">
+									<button type="submit" class="btn btn-secondary btn-sm fuse-ripple-ready" value="Применить">Применить</button>
+								</div>
+							</div>
+						 </div>
+					</div>
+				</form>
+				</div>
+				<div class="col-12 col-md-3">
+					<div class="card">
+						<div class="card-body">
+						<form method="get">
+							<div class="form-group">
+								<label for="order-type">Фильтр заказов по статусу:</label>
+								<select class="form-control" id="order-type" onchange="if(this.value)window.location.href=this.value">
+									<option value="/engine/index.php?module=OrdersAdmin&status=0" {if $status==0}selected{/if}>Новые</option>
+									<option value="/engine/index.php?module=OrdersAdmin&status=1" {if $status==1}selected{/if}>Принятые</option>
+									<option value="/engine/index.php?module=OrdersAdmin&status=2" {if $status==2}selected{/if}>Выполненные</option>
+									<option value="/engine/index.php?module=OrdersAdmin&status=3" {if $status==3}selected{/if}>Удаленные</option>
+								</select>
+							</div>
+							
+							<div class="input-group mb-3">
+								<input type="hidden" name="module" value="OrdersAdmin">
+								<input name="keyword" type="text" value="{$keyword|escape}" class="form-control" placeholder="Поиск по заказам" aria-label="Поиск по заказам" aria-describedby="basic-addon2">
+								<div class="input-group-append">
+									<button class="btn btn-secondary btn-fab btn-sm" style="border-radius:50%;" type="submit" value="">
+										<i class="icon-magnify"></i>
+									</button>
+								</div>
+							</div>
+						</form>
+						</div>
+					</div>
+				</div>
+				<div class="col-12">
+				{include file='pagination.tpl'}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

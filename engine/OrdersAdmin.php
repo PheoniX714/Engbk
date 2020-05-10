@@ -124,10 +124,10 @@ class OrdersAdmin extends Engine
 		foreach($this->orders->get_orders($filter) as $o)
 			$orders[$o->id] = $o;
 	 	
-		// Метки заказов
+		/* // Метки заказов
 		$orders_labels = array();
 	  	foreach($this->orders->get_order_labels(array_keys($orders)) as $ol)
-	  		$orders[$ol->order_id]->labels[] = $ol;
+	  		$orders[$ol->order_id]->labels[] = $ol; */
 	  	
 	 	$this->templates->assign('pages_count', ceil($orders_count/$filter['limit']));
 	 	$this->templates->assign('current_page', $filter['page']);

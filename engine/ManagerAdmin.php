@@ -12,6 +12,7 @@ class ManagerAdmin extends Engine
 			$manager = new stdClass();
 			$manager->id = $this->request->post('id', 'integer');
 			$manager->login = $this->request->post('login');
+			$manager->email = $this->request->post('email');
 			
 			if($manager->id == 1)
 				$manager->permissions = array_column($perm_list, 'code');
@@ -26,10 +27,20 @@ class ManagerAdmin extends Engine
 			{
 	  			$this->templates->assign('message_error', 'login_exists');
 			}
+			elseif(empty($manager->email))
+			{
+				$this->templates->assign('message_error', 'empty_email');			
+			}
+			
 			else
-			{	
+			{	 				
 				if($this->request->post('password') != "")
 					$manager->password = $this->request->post('password');
+				
+				if($_SESSION['admin_id'] == $manager->id){
+					$m = $this->managers->get_manager($manager->id);
+					$manager->permissions = $m->permissions;
+				}
 				
 				if(empty($manager->id))
 				{
@@ -55,8 +66,8 @@ class ManagerAdmin extends Engine
 		if(!empty($manager))
 		{
 			$this->templates->assign('m', $manager);
-			$this->templates->assign('perms', $perm_list);
 		}
+		$this->templates->assign('perms', $perm_list);
 		
  	  	return $this->templates->fetch('settings/manager.tpl');
 	}

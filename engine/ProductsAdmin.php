@@ -8,21 +8,33 @@ class ProductsAdmin extends Engine
 	{		
 		$currency = $this->money->get_currency();
 		$this->templates->assign("currency", $currency);
+		
+		$language = $this->languages->get_main_language();
 
 		$filter = array();
+		$filter['need_translate'] = true;
 		$filter['page'] = max(1, $this->request->get('page', 'integer'));
 			
-		$filter['limit'] = $this->settings->products_num_admin;
+		/* $filter['limit'] = $this->settings->products_num_admin; */
+		$filter['limit'] = 30;
 	
 		// Категории
 		$categories = $this->categories->get_categories_tree();
 		$this->templates->assign('categories', $categories);
 		
 		// Текущая категория
-		$category_id = $this->request->get('category_id', 'integer'); 
+		$category_id = $this->request->get('category_id', 'integer');
 		if($category_id && $category = $this->categories->get_category($category_id))
 	  		$filter['category_id'] = $category->children;
+		
+		$this->templates->assign('category_id', $category_id);
+		
+		$filter['language_id'] = $this->request->get('filter_language', 'integer');
+		if(empty($filter['language_id']))
+			$filter['language_id'] = $language->id;
+		$this->templates->assign('filter_language', $filter['language_id']);
 		      
+			  
 		// Текущий фильтр
 		if($f = $this->request->get('filter', 'string'))
 		{
@@ -31,9 +43,9 @@ class ProductsAdmin extends Engine
 			elseif($f == 'discounted')
 				$filter['discounted'] = 1; 
 			elseif($f == 'visible')
-				$filter['visible_admin'] = 1; 
+				$filter['visible'] = 1; 
 			elseif($f == 'hidden')
-				$filter['visible_admin'] = 0; 
+				$filter['visible'] = 0; 
 			elseif($f == 'in_stock')
 				$filter['in_stock'] = 1; 
 			elseif($f == 'outofstock')
@@ -48,12 +60,16 @@ class ProductsAdmin extends Engine
 	  		$filter['keyword'] = $keyword;
 			$this->templates->assign('keyword', $keyword);
 		}
-			
+		
+		if(!empty($category_id) or !empty($keyword) or !empty($f) or $filter['language_id'] != $language->id){
+			$this->templates->assign('show_filters', true);
+		}
+		
 		// Обработка действий
 		if($this->request->method('post'))
 		{
 			// Сохранение цен и наличия
-			$prices = $this->request->post('price');
+			/* $prices = $this->request->post('price');
 			$stocks = $this->request->post('stock');
 		
 			foreach($prices as $id=>$price)
@@ -63,7 +79,7 @@ class ProductsAdmin extends Engine
 					$stock = null;
 					
 				$this->variants->update_variant($id, array('price'=>$price, 'stock'=>$stock));
-			}
+			} */
 		
 			// Сортировка
 			$positions = $this->request->post('positions'); 		
@@ -239,8 +255,15 @@ class ProductsAdmin extends Engine
 		
 			$images = $this->products->get_images(array('product_id'=>$products_ids));
 			foreach($images as $image)
-				$products[$image->product_id]->images[$image->id] = $image;
+				$products[$image->product_id]->images[] = $image;
+			
+			foreach($products as &$product)
+				if(isset($product->images[0]))
+					$product->image = $product->images[0];
 		}
+		
+		$languages = $this->languages->get_languages();
+		$this->templates->assign('languages', $languages);
 	 
 		$this->templates->assign('products', $products);
 	

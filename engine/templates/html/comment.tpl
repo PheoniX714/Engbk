@@ -1,12 +1,12 @@
-{$sm_groupe = 'comments' scope=parent}
-{$meta_title='Добавить ответ к комментарию' scope=parent}
+{$sm_groupe = 'comments' scope='root'}
+{$meta_title='Добавить ответ к комментарию' scope='root'}
 {$page_additional_css = '
 	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-' scope=parent}
+' scope='root'}
 {$page_additional_js = '
 	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
 	<script src="./templates/js/jquery.sticky.js"></script>
-' scope=parent}
+' scope='root'}
 <section class="content-header">
 	<h1>{if $post->id}{$post->name}{else}Новая новость{/if} <small>{if $post->id}Редактирование{else}Создание{/if} новости</small></h1>
 	<ol class="breadcrumb">

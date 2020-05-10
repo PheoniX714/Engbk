@@ -6,13 +6,13 @@
 db_server = "astyle.mysql.ukraine.com.ua"
 
 ;Пользователь базы данных
-db_user = "astyle_vivavknew"
+db_user = "astyle_maincms"
 
 ;Пароль к базе
-db_password = "cq3wbtb9"
+db_password = "rfqvkqle"
 
 ;Имя базы
-db_name = "astyle_vivavknew"
+db_name = "astyle_maincms"
 
 ;Префикс для таблиц
 db_prefix = f_;
@@ -58,10 +58,22 @@ original_images_dir = files/originals/;
 resized_images_dir = files/products/;
 
 ;Изображения категорий
-categories_images_dir = files/categories/;
+category_images_dir = files/category/; 
 
 ;Изображения брендов
 brands_images_dir = files/brands/;
+
+;Превью страницы
+page_image_dir = files/pages/;
+
+Дополнительные изображения страниц
+page_images_dir = files/page_images/;
+
+;Превью новостей
+news_image_dir = files/news/;
+
+;Дополнительные изображения страниц
+news_images_dir = files/news_images/;
 
 ;Файл изображения с водяным знаком
 watermark_file = engine/files/watermark/watermark.png;

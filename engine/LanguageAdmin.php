@@ -10,6 +10,7 @@ class LanguageAdmin extends Engine
 			$language = new stdClass();
 			$language->id = $this->request->post('id', 'integer');
 			$language->name = $this->request->post('name');
+			$language->visible_name = $this->request->post('visible_name');
 			$language->code = substr($this->request->post('code'), 0, 2);
 			$language->currency_id = $this->request->post('currency_id', 'integer');
 			

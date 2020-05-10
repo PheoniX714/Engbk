@@ -21,6 +21,9 @@ class Templates extends Engine
 
 		// Берем тему
 		$theme = $this->get_theme();
+		
+		if(empty($theme))
+			$theme = 'default';
 
 		$this->smarty->compile_dir = $this->config->root_dir.'/templates/compiled/'.$theme;
 		$this->smarty->template_dir = $this->config->root_dir.'/templates/'.$theme.'/html';		
@@ -45,8 +48,7 @@ class Templates extends Engine
 			$this->smarty->loadFilter('output', 'trimwhitespace');
 	}
 	
-	public function assign($var, $value)
-	{
+	public function assign($var, $value){
 		return $this->smarty->assign($var, $value);
 	}
 
@@ -91,14 +93,11 @@ class Templates extends Engine
  
 	public function get_theme(){
 		if(!isset($_COOKIE['theme']) || !is_dir($this->config->root_dir.'/templates/'.$_COOKIE['theme'].'/html')) {
-			if($this->is_mobile_browser())
-				$theme = $this->set_theme($this->settings->theme_mobile);
-			else
-				$theme = $this->set_theme($this->settings->theme_full);
+			$theme = $this->set_theme($this->settings->theme);
 		}
 		else
 			$theme = $_COOKIE['theme'];
-	 
+		
 		return $theme;
 	}
 	 
@@ -111,6 +110,7 @@ class Templates extends Engine
 				if(is_dir('templates/'.$file) && $file[0] != '.')
 				{
 					unset($theme);
+					$theme = new stdClass;
 					$theme->name = $file;
 					$themes[] = $theme; 
 				} 
@@ -119,124 +119,7 @@ class Templates extends Engine
 			sort($themes);
 		}
 		return $themes;
-	}  
-
-	private function is_mobile_browser()
-	{
-		$user_agent = $_SERVER['HTTP_USER_AGENT']; 
-		$http_accept = isset($_SERVER['HTTP_ACCEPT'])?$_SERVER['HTTP_ACCEPT']:'';
-
-		if(eregi('iPad', $user_agent))
-			return false;
-		
-		if(stristr($user_agent, 'windows') && !stristr($user_agent, 'windows ce'))
-			return false;
-		
-		if(eregi('windows ce|iemobile|mobile|symbian|mini|wap|pda|psp|up.browser|up.link|mmp|midp|phone|pocket', $user_agent))
-			return true;
-	
-		if(stristr($http_accept, 'text/vnd.wap.wml') || stristr($http_accept, 'application/vnd.wap.xhtml+xml'))
-			return true;
-			
-		if(!empty($_SERVER['HTTP_X_WAP_PROFILE']) || !empty($_SERVER['HTTP_PROFILE']) || !empty($_SERVER['X-OperaMini-Features']) || !empty($_SERVER['UA-pixels']))
-			return true;
-	
-		$agents = array(
-		'acs-'=>'acs-',
-		'alav'=>'alav',
-		'alca'=>'alca',
-		'amoi'=>'amoi',
-		'audi'=>'audi',
-		'aste'=>'aste',
-		'avan'=>'avan',
-		'benq'=>'benq',
-		'bird'=>'bird',
-		'blac'=>'blac',
-		'blaz'=>'blaz',
-		'brew'=>'brew',
-		'cell'=>'cell',
-		'cldc'=>'cldc',
-		'cmd-'=>'cmd-',
-		'dang'=>'dang',
-		'doco'=>'doco',
-		'eric'=>'eric',
-		'hipt'=>'hipt',
-		'inno'=>'inno',
-		'ipaq'=>'ipaq',
-		'java'=>'java',
-		'jigs'=>'jigs',
-		'kddi'=>'kddi',
-		'keji'=>'keji',
-		'leno'=>'leno',
-		'lg-c'=>'lg-c',
-		'lg-d'=>'lg-d',
-		'lg-g'=>'lg-g',
-		'lge-'=>'lge-',
-		'maui'=>'maui',
-		'maxo'=>'maxo',
-		'midp'=>'midp',
-		'mits'=>'mits',
-		'mmef'=>'mmef',
-		'mobi'=>'mobi',
-		'mot-'=>'mot-',
-		'moto'=>'moto',
-		'mwbp'=>'mwbp',
-		'nec-'=>'nec-',
-		'newt'=>'newt',
-		'noki'=>'noki',
-		'opwv'=>'opwv',
-		'palm'=>'palm',
-		'pana'=>'pana',
-		'pant'=>'pant',
-		'pdxg'=>'pdxg',
-		'phil'=>'phil',
-		'play'=>'play',
-		'pluc'=>'pluc',
-		'port'=>'port',
-		'prox'=>'prox',
-		'qtek'=>'qtek',
-		'qwap'=>'qwap',
-		'sage'=>'sage',
-		'sams'=>'sams',
-		'sany'=>'sany',
-		'sch-'=>'sch-',
-		'sec-'=>'sec-',
-		'send'=>'send',
-		'seri'=>'seri',
-		'sgh-'=>'sgh-',
-		'shar'=>'shar',
-		'sie-'=>'sie-',
-		'siem'=>'siem',
-		'smal'=>'smal',
-		'smar'=>'smar',
-		'sony'=>'sony',
-		'sph-'=>'sph-',
-		'symb'=>'symb',
-		't-mo'=>'t-mo',
-		'teli'=>'teli',
-		'tim-'=>'tim-',
-		'tosh'=>'tosh',
-		'treo'=>'treo',
-		'tsm-'=>'tsm-',
-		'upg1'=>'upg1',
-		'upsi'=>'upsi',
-		'vk-v'=>'vk-v',
-		'voda'=>'voda',
-		'wap-'=>'wap-',
-		'wapa'=>'wapa',
-		'wapi'=>'wapi',
-		'wapp'=>'wapp',
-		'wapr'=>'wapr',
-		'webc'=>'webc',
-		'winw'=>'winw',
-		'winw'=>'winw',
-		'xda-'=>'xda-'
-		);
-		
-		if(!empty($agents[substr($_SERVER['HTTP_USER_AGENT'], 0, 4)]))
-	    	return true;
-	}	
-
+	}
 
 	public function resize_modifier($filename, $width=0, $height=0, $set_watermark=false)
 	{
@@ -269,16 +152,16 @@ class Templates extends Engine
 		$number = abs($number); 
 		if(!empty($plural2))
 		{
-		$p1 = $number%10;
-		$p2 = $number%100;
-		if($number == 0)
-			return $plural1;
-		if($p1==1 && !($p2>=11 && $p2<=19))
-			return $singular;
-		elseif($p1>=2 && $p1<=4 && !($p2>=11 && $p2<=19))
-			return $plural2;
-		else
-			return $plural1;
+			$p1 = $number%10;
+			$p2 = $number%100;
+			if($number == 0)
+				return $plural1;
+			if($p1==1 && !($p2>=11 && $p2<=19))
+				return $singular;
+			elseif($p1>=2 && $p1<=4 && !($p2>=11 && $p2<=19))
+				return $plural2;
+			else
+				return $plural1;
 		}else
 		{
 			if($number == 1)
@@ -286,7 +169,6 @@ class Templates extends Engine
 			else
 				return $plural1;
 		}
-	
 	}
 
 	public function first_modifier($params = array())
@@ -316,7 +198,7 @@ class Templates extends Engine
 	    return date(empty($format)?'H:i':$format, strtotime($date));
 	}
 	
-	public function api_plugin($params, &$smarty)
+	public function api_plugin($params, $smarty)
 	{
 		if(!isset($params['module']))
 			return false;

@@ -77,8 +77,30 @@ class Database extends Engine
 			$this->res->free();
 			
 		$args = func_get_args();
-		$q = call_user_func_array(array($this, 'placehold'), $args);		
- 		return $this->res = $this->mysqli->query($q);
+		$q = call_user_func_array(array($this, 'placehold'), $args);
+		if($this->config->debug){
+			$query = array();
+			
+			$time_start = microtime(true);		
+			$this->res = $this->mysqli->query($q);
+			$time_end = microtime(true);
+			
+			preg_match('/\w+/',$q, $type);
+			preg_match('/f_\w+/',$q, $table);
+			
+			$query['type'] = $type[0];
+			$query['table'] = $table[0];
+			$query['time'] = $time_end-$time_start;
+			if($this->mysqli->error_list){
+				$query['query'] = $q;
+				$query['error'] = $this->mysqli->error_list;
+			}
+			$query['query'] = $q;
+			$_SESSION['debag'][] = $query;			
+		}
+		else
+			$this->res = $this->mysqli->query($q);
+ 		return $this->res;
 	}
 	
 

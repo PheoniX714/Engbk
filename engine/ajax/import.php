@@ -1,4 +1,5 @@
 <?php
+
 require_once('../../api/Engine.php');
 
 class ImportAjax extends Engine
@@ -6,7 +7,6 @@ class ImportAjax extends Engine
 	// Соответствие полей в базе и имён колонок в файле
 	private $columns_names = array(
 			'name'=>             array('product', 'name', 'товар', 'название', 'наименование'),
-			'visible_name'=>     array('visible_name', 'название товара', 'отображаемое название'),
 			'url'=>              array('url', 'адрес'),
 			'visible'=>          array('visible', 'published', 'видим'),
 			'featured'=>         array('featured', 'hit', 'хит', 'рекомендуемый'),
@@ -22,18 +22,15 @@ class ImportAjax extends Engine
 			'meta_description'=> array('meta description', 'описание страницы'),
 			'annotation'=>       array('annotation', 'аннотация', 'краткое описание'),
 			'description'=>      array('description', 'описание'),
-			'color'=>            array('color_id', 'код цвета'),
-			'group_id'=>         array('group_id', 'ид группы'),
 			'images'=>           array('images', 'изображения')
 			);
-	private $col_to_lang_id = array();
 	
 	// Соответствие имени колонки и поля в базе
 	private $internal_columns_names = array();
 
 	private $import_files_dir      = '../files/import/'; // Временная папка		
 	private $import_file           = 'import.csv';           // Временный файл
-	private $category_delimiter = ',';                       // Разделитель каегорий в файле
+	private $category_delimiter = '&';                       // Разделитель категорий в файле
 	private $subcategory_delimiter = '/';                    // Разделитель подкаегорий в файле
 	private $column_delimiter      = ';';
 	private $products_count        = 5;
@@ -41,33 +38,9 @@ class ImportAjax extends Engine
 
 	public function import()
 	{
+
 		// Для корректной работы установим локаль UTF-8
 		setlocale(LC_ALL, 'ru_RU.UTF-8');
-		
-		//Автоматически дополним названия колонок для переводов на другие языки
-		$colums_translations = array();
-		$pt_product_name = 'product_name_'; //Шаблон названия колонки для поля 'visible_name'
-		$pt_product_name_col = 'visible_name'; //Шаблон названия колонки для поля 'visible_name'
-		
-		//Получим текущие языки сайта и сформируем возможные названия колонок
-		$languages = $this->languages->get_languages();
-		$col_to_lang_id = array();
-		
-		foreach($languages as $lang){
-			//Пропустим основной язык сайта, так как товари и так на нем
-			if($lang->id==1)
-				continue;
-			
-			//Запомним названий колонок для каждого языка
-			$col_to_lang_id[$pt_product_name.$lang->code]['lang'] = $lang->id;
-			$col_to_lang_id[$pt_product_name.$lang->code]['column'] = $pt_product_name_col;
-			
-			$colums_translations =  array_merge($colums_translations, array($pt_product_name.$lang->code=>array($pt_product_name.$lang->code)));
-		}
-		
-		//Дополним массив соответствий полей в базе и имён колонок в файле
-		$this->columns_names = array_merge($this->columns_names, $colums_translations);
-		$this->col_to_lang_id = array_merge($this->col_to_lang_id, $col_to_lang_id);
 		
 		$result = new stdClass;
 		
@@ -86,7 +59,7 @@ class ImportAjax extends Engine
 		}
 
 		// Если нет названия товара - не будем импортировать
-		if(!in_array('name', $this->columns))
+		if(!in_array('name', $this->columns) && !in_array('sku', $this->columns))
 			return false;
 	 	
 		// Переходим на заданную позицию, если импортируем не сначала
@@ -139,51 +112,46 @@ class ImportAjax extends Engine
 	// Импорт одного товара $item[column_name] = value;
 	private function import_item($item)
 	{
+		$language = $this->languages->get_main_language();
+		
 		$imported_item = new stdClass;
 		
 		// Проверим не пустое ли название и артинкул (должно быть хоть что-то из них)
-		if(empty($item['name']))
+		if(empty($item['name']) && empty($item['sku']))
 			return false;
 
 		// Подготовим товар для добавления в базу
 		$product = array();
+		$translation = array();
 		
 		if(isset($item['name']))
-			$product['name'] = trim($item['name']);
-		
-		if(isset($item['visible_name']))
-			$product['visible_name'] = trim($item['visible_name']);
+			$translation['name'] = trim($item['name']);
 
 		if(isset($item['meta_title']))
-			$product['meta_title'] = trim($item['meta_title']);
-		elseif(isset($item['visible_name']))
-			$product['meta_title'] = trim($item['visible_name']);			
+			$translation['meta_title'] = trim($item['meta_title']);
 
 		if(isset($item['meta_keywords']))
-			$product['meta_keywords'] = trim($item['meta_keywords']);
+			$translation['meta_keywords'] = trim($item['meta_keywords']);
 
 		if(isset($item['meta_description']))
-			$product['meta_description'] = trim($item['meta_description']);
+			$translation['meta_description'] = trim($item['meta_description']);
 
 		if(isset($item['annotation']))
-			$product['annotation'] = trim($item['annotation']);
+			$translation['annotation'] = trim($item['annotation']);
 
 		if(isset($item['description']))
-			$product['body'] = trim($item['description']);
+			$translation['body'] = trim($item['description']);
 	
 		if(isset($item['visible']))
 			$product['visible'] = intval($item['visible']);
 
 		if(isset($item['featured']))
 			$product['featured'] = intval($item['featured']);
-		
-		if(isset($item['color']))
-			$product['color'] = trim($item['color']);
 	
 		if(!empty($item['url']))
-			$product['url'] = trim($item['url']);
+			$translation['url'] = trim($item['url']);
 		elseif(!empty($item['name']))
-			$product['url'] = $this->translit($item['name']);
+			$translation['url'] = $this->translit($item['name']);
 	
 		// Если задан бренд
 		if(!empty($item['brand']))
@@ -228,7 +196,7 @@ class ImportAjax extends Engine
 			$variant['sku'] = trim($item['sku']);
 		
 		// Если задан артикул варианта, найдем этот вариант и соответствующий товар
-		/* if(!empty($variant['sku']))
+		if(!empty($variant['sku']))
 		{ 
 			$this->db->query('SELECT id as variant_id, product_id FROM __variants, __products WHERE sku=? AND __variants.product_id = __products.id LIMIT 1', $variant['sku']);
 			$result = $this->db->result();
@@ -237,6 +205,14 @@ class ImportAjax extends Engine
 				// и обновим товар
 				if(!empty($product))
 					$this->products->update_product($result->product_id, $product);
+				if(!empty($translation)){
+					$translation['language_id'] = $language->id;
+					$translation['product_id'] = $result->product_id;
+										
+					if($this->products->delete_product_translation($result->product_id, $language->id)){
+						$this->products->add_product_translation($translation);
+					}
+				}
 				// и вариант
 				if(!empty($variant))
 					$this->variants->update_variant($result->variant_id, $variant);
@@ -246,20 +222,19 @@ class ImportAjax extends Engine
 				// Обновлен
 				$imported_item->status = 'updated';
 			}
-		} */
-		
+		}
+
 		// Если на прошлом шаге товар не нашелся, и задано хотя бы название товара
 		if((empty($product_id) || empty($variant_id)) && isset($item['name']))
 		{
-			/* if(!empty($variant['sku']) && empty($variant['name']))
+			if(!empty($variant['sku']) && empty($variant['name']))
 				$this->db->query('SELECT v.id as variant_id, p.id as product_id FROM __products p LEFT JOIN __variants v ON v.product_id=p.id WHERE v.sku=? LIMIT 1', $variant['sku']);			
-			else */
-			if(isset($item['variant']))
-				$this->db->query('SELECT v.id as variant_id, p.id as product_id FROM __products p LEFT JOIN __variants v ON v.product_id=p.id AND v.name=? WHERE p.name=? LIMIT 1', $item['variant'], $item['name']);
+			elseif(isset($item['variant']))
+				$this->db->query('SELECT v.id as variant_id, pt.product_id FROM __products_translations pt LEFT JOIN __variants v ON v.product_id=pt.product_id AND v.name=? WHERE pt.name=? LIMIT 1', $item['variant'], $item['name']);
 			else
-				$this->db->query('SELECT v.id as variant_id, p.id as product_id FROM __products p LEFT JOIN __variants v ON v.product_id=p.id WHERE p.name=? LIMIT 1', $item['name']);			
-			
+				$this->db->query('SELECT v.id as variant_id, pt.product_id FROM __products_translations pt LEFT JOIN __variants v ON v.product_id=pt.product_id WHERE pt.name=? LIMIT 1', $item['name']);
 			$r =  $this->db->result();
+			
 			if($r)
 			{
 				$product_id = $r->product_id;
@@ -269,7 +244,15 @@ class ImportAjax extends Engine
 			if(!empty($variant_id))
 			{
 				$this->variants->update_variant($variant_id, $variant);
-				$this->products->update_product($product_id, $product);				
+				$this->products->update_product($product_id, $product);		
+				if(!empty($product_id)){
+					$translation['language_id'] = $language->id;
+					$translation['product_id'] = $result->product_id;
+										
+					if($this->products->delete_product_translation($result->product_id, $language->id)){
+						$this->products->add_product_translation($translation);
+					}
+				}
 				$imported_item->status = 'updated';		
 			}
 			// Иначе - добавляем
@@ -277,6 +260,15 @@ class ImportAjax extends Engine
 			{
 				if(empty($product_id))
 					$product_id = $this->products->add_product($product);
+				
+				if(!empty($product_id)){
+					$translation['language_id'] = $language->id;
+					$translation['product_id'] = $product_id;
+										
+					if($this->products->delete_product_translation($result->product_id, $language->id)){
+						$this->products->add_product_translation($translation);
+					}
+				}
 
                 $this->db->query('SELECT max(v.position) as pos FROM __variants v WHERE v.product_id=? LIMIT 1', $product_id);
                 $pos =  $this->db->result('pos');
@@ -292,48 +284,14 @@ class ImportAjax extends Engine
 		{
 			// Нужно вернуть обновленный товар
 			$imported_item->variant = $this->variants->get_variant(intval($variant_id));			
-			$imported_item->product = $this->products->get_product(intval($product_id));						
+			$product = $this->products->get_product(intval($product_id));
+			$translation = $this->products->get_product_translation(intval($product->id), intval($language->id));
+			$imported_item->product = (object)array_merge((array)$product, (array)$translation);
 	
 			// Добавляем категории к товару
 			if(!empty($categories_ids))
-				foreach($categories_ids as $c_id){
-					//Чистим базу от уже существующих записей во избежание не нужных дублей
-					$this->categories->delete_product_category($product_id, $c_id);
-					//Теперь добавляем
+				foreach($categories_ids as $c_id)
 					$this->categories->add_product_category($product_id, $c_id);
-				}
-					
-			// Добавляем товар в группы
-			if(isset($item['group_id'])){
-				$group_code = trim($item['group_id']);
-				
-				$group = $this->products->get_group($group_code);
-				$this->db->query('DELETE FROM __products_groups_items WHERE product_id=?', $product_id);
-				
-				// Если группа существует
-				if($group->id){					
-					$group_p = $this->products->get_group_products($group->id);
-					$group_products = array();
-					foreach($group_p  as $gp){
-						$group_products[] = $gp->product_id;
-					}
-					$group_products[] = $product_id;
-					
-					$this->products->delete_group_products($group->id);
-					if(is_array($group_products))
-					{
-						$pos = 0;
-						foreach($group_products  as $i=>$group_product){
-							$this->products->add_group_product($group_product, $group->id, $pos++);
-						}
-					}
-				}else{
-					$group_id = $this->products->add_group(array('group_code'=>$group_code, 'visible'=>1));
-					if(!empty($group_id))
-						$this->products->add_group_product($product_id, $group_id);
-				}
-			}
-			
 	
 	 		// Изображения товаров
 	 		if(isset($item['images']))
@@ -356,34 +314,7 @@ class ImportAjax extends Engine
 						}
 					}
 	 			}
-	 		}	
-			
-			foreach($this->col_to_lang_id as $col_translated_name=>$col_data){
-				if(isset($item[$col_translated_name]))
-				{
-					$translation = new stdClass;
-					$translation = $this->products->get_product_translation(intval($product_id), intval($col_data['lang']));
-					
-					$this->products->delete_product_translation(intval($product_id), intval($col_data['lang']));
-					
-					if($col_data['column'] == 'visible_name'){
-						$translation->name = $item[$col_translated_name];
-						$translation->visible_name = $item[$col_translated_name];
-					}
-					
-					
-					
-					if(empty($translation->product_id))
-						$translation->product_id = $product_id;
-					
-					if(empty($translation->language_id))
-						$translation->language_id = $col_data['lang'];
-					
-					$this->products->add_product_translation($translation);
-				}	
-				
-			}
-			
+	 		}
 	 		// Характеристики товаров
 	 		foreach($item as $feature_name=>$feature_value)
 	 		{
@@ -393,12 +324,11 @@ class ImportAjax extends Engine
 	 				// Свойство добавляем только если для товара указана категория и непустое значение свойства
 					if($category_id && $feature_value!=='')
 					{
-						$this->db->query('SELECT f.id FROM __features f WHERE f.name=? LIMIT 1', $feature_name);
-						if(!$feature_id = $this->db->result('id'))
-							$feature_id = $this->features->add_feature(array('name'=>$feature_name));
+						$this->db->query('SELECT ft.feature_id as id FROM __features_translations ft WHERE ft.name=? LIMIT 1', $feature_name);
+						#if(!$feature_id = $this->db->result('id'))
+							#$feature_id = $this->features->add_feature(array('name'=>$feature_name));
 						
-						//Чистим базу от уже существующих записей во избежание не нужных дублей
-						$this->features->delete_feature_category($feature_id, $category_id);		
+						$feature_id = $this->db->result('id');
 						
 						$this->features->add_feature_category($feature_id, $category_id);				
 						$this->features->update_option($product_id, $feature_id, $feature_value);
@@ -413,7 +343,9 @@ class ImportAjax extends Engine
 	
 	// Отдельная функция для импорта категории
 	private function import_category($category)
-	{			
+	{		
+		$language = $this->languages->get_main_language();
+	
 		// Поле "категория" может состоять из нескольких имен, разделенных subcategory_delimiter-ом
 		// Только неэкранированный subcategory_delimiter может разделять категории
 		$delimiter = $this->subcategory_delimiter;
@@ -431,12 +363,27 @@ class ImportAjax extends Engine
 			if(!empty($name))
 			{
 				// Найдем категорию по имени
-				$this->db->query('SELECT id FROM __categories WHERE name=? AND parent_id=?', $name, $parent);
+				$this->db->query('SELECT c.id FROM __categories c LEFT JOIN __categories_translations ct ON ct.category_id=c.id WHERE ct.name=? AND c.parent_id=? LIMIT 1', $name, $parent);
 				$id = $this->db->result('id');
-				
+								
 				// Если не найдена - добавим ее
 				if(empty($id))
-					$id = $this->categories->add_category(array('name'=>$name, 'parent_id'=>$parent, 'meta_title'=>$name,  'meta_keywords'=>$name,  'meta_description'=>$name, 'url'=>$this->translit($name)));
+					$id = $this->categories->add_category(array('parent_id'=>$parent, 'visible'=>1));
+				
+				if(!empty($id)){
+					$translation = new stdClass;
+					$translation->category_id = $id;
+					$translation->language_id = $language->id;
+					$translation->name = $name;
+					$translation->url = $this->translit($name);
+					$translation->meta_title = $name;
+					$translation->meta_keywords = $name;
+					$translation->meta_description = $name;
+					
+					if($this->categories->delete_category_translation($translation->category_id, $translation->language_id))
+						$this->categories->add_category_translation($translation);
+					
+				}
 
 				$parent = $id;
 			}	

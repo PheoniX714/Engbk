@@ -6,9 +6,14 @@ class NewsAdmin extends Engine
 {
 	public function fetch()
 	{
+		$language = $this->languages->get_main_language();
+		$this->templates->assign('main_language', $language);
+		
 		// Обработка действий
 		if($this->request->method('post'))
 		{
+			$filter_language = $this->request->post('filter_language');
+			
 			// Действия с выбранными
 			$ids = $this->request->post('check');
 			if(is_array($ids))
@@ -27,17 +32,23 @@ class NewsAdmin extends Engine
 			    case 'delete':
 			    {
 				    foreach($ids as $id)
-						$this->news->delete_post($id);    
+						$this->news->delete_post($id);
+
 			        break;
 			    }
 			}				
 		}
+		
+		if(empty($filter_language))
+			$filter_language = $language->id;
+		$this->templates->assign('filter_language', $filter_language);
 
 		$filter = array();
 		$filter['page'] = max(1, $this->request->get('page', 'integer')); 		
 		$filter['limit'] = 20;
+		
+		$filter['language_id'] = $filter_language;
   	
-		// Поиск
 		$keyword = $this->request->get('keyword', 'string');
 		if(!empty($keyword))
 		{
@@ -56,6 +67,9 @@ class NewsAdmin extends Engine
 		$this->templates->assign('pages_count', ceil($posts_count/$filter['limit']));
 		$this->templates->assign('current_page', $filter['page']);
 		
+		$languages = $this->languages->get_languages();
+		$this->templates->assign('languages', $languages);
+				
 		$this->templates->assign('posts', $posts);
 		return $this->templates->fetch('news/news.tpl');
 	}

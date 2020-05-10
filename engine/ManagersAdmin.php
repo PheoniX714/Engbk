@@ -2,14 +2,10 @@
 
 require_once('api/Engine.php');
 
-############################################
-# Class Properties displays a list of product parameters
-############################################
 class ManagersAdmin extends Engine
 {
 	function fetch()
 	{	
-
 		if($this->request->method('post'))
 		{
 			// Действия с выбранными
@@ -19,8 +15,10 @@ class ManagersAdmin extends Engine
 			{
 			    case 'delete':
 			    {
-			    	foreach($ids as $id)
+			    	foreach($ids as $id){
+						
 						$this->managers->delete_manager($id);    
+					}
 			        break;
 			    }
 			}		

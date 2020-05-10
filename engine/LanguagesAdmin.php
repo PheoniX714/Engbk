@@ -2,14 +2,10 @@
 
 require_once('api/Engine.php');
 
-########################################
 class LanguagesAdmin extends Engine
 {
-
-
-  public function fetch()
-  {
-  
+	public function fetch()
+	{
 	   	// Обработка действий
 		if($this->request->method('post'))
 		{
@@ -19,7 +15,6 @@ class LanguagesAdmin extends Engine
 			sort($positions);
 			foreach($positions as $i=>$position)
 				$this->languages->update_language($ids[$i], array('position'=>$position)); 
-
 			
 			// Действия с выбранными
 			$ids = $this->request->post('check');

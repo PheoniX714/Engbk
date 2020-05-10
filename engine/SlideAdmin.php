@@ -9,36 +9,31 @@ class SlideAdmin extends Engine
 		if($this->request->method('POST'))
 		{
 			$slide->id = $this->request->post('id', 'integer');
-			$slide->link = $this->request->post('link');
-			$slide->filename = $this->request->post('filename');
 			$slide->visible = $this->request->post('visible', 'boolean');
-			$slide->slider_id = $this->request->post('slider_id', 'integer');				
-			$slide->language_id = $this->request->post('language_id', 'integer');				
-			/* $filename_old = $this->request->post('filename_old'); */
 			
-			/* $images = $this->request->files('image');
-			if(empty($images)){
-				$this->slider->delete_image($slide->filename);
+			$image = $this->request->files('image');
+			if(!empty($image['name'])){
+				$s = $this->slider->get_slide($slide->id);
+				$this->slider->delete_image($s->filename);
 				$slide->filename = '';
-			} */
-				
+			}
+			
 			if(empty($slide->id))
 			{
 	  			$slide->id = $this->slider->add_slide($slide);
-	  			$slide = $this->slider->get_slide($slide->id);
+				$slide = $this->slider->get_slide($slide->id);
 	  			$this->templates->assign('message_success', 'added');
   	    	}
   	    	else
   	    	{
   	    		$this->slider->update_slide($slide->id, $slide);
-	  			$slide = $this->slider->get_slide($slide->id);
+				$slide = $this->slider->get_slide($slide->id);
 	  			$this->templates->assign('message_success', 'updated');
    	    	}
 			
-	   	    /* // Загрузка изображения
-		  	if($images)
-		  	{
-				if ($image_name = $this->image->upload_slide($images['tmp_name'], $images['name']))
+			if($image)
+			{
+				if ($image_name = $this->image->upload_image($image['tmp_name'], $image['name'], 'files/slider/'))
 				{
 					$this->slider->add_image($slide->id, $image_name);
 				}
@@ -46,8 +41,9 @@ class SlideAdmin extends Engine
 				{
 					$this->templates->assign('error', 'error uploading image');
 				}
-				$slide = $this->slider->get_slide($slide->id);
-			} */
+			}
+			$slide = $this->slider->get_slide($slide->id);
+			
 		}
 		else
 		{
@@ -57,11 +53,8 @@ class SlideAdmin extends Engine
 			else
 			{
 				$slide->visible = 1;
-				$slide->slider_id = 1;
 			}
 		}
-		$languages = $this->languages->get_languages();
-		$this->templates->assign('languages', $languages);
 		
 		$this->templates->assign('slide', $slide);
  	  	return $this->templates->fetch('slider/slide.tpl');

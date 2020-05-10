@@ -7,6 +7,7 @@ class NewsView extends View
 	public function fetch()
 	{
 		$url = $this->request->get('url', 'string');
+		$section = $this->request->get('section', 'string');
 		
 		// Если указан адрес поста,
 		if(!empty($url))
@@ -17,7 +18,7 @@ class NewsView extends View
 		else
 		{
 			// Иначе выводим ленту блога
-			return $this->fetch_news();
+			return $this->fetch_news($section);
 		}
 	}
 	
@@ -30,7 +31,10 @@ class NewsView extends View
 		if(!$post || (!$post->visible && empty($_SESSION['admin'])))
 			return false;
 		
-		$this->templates->assign('post',      $post);
+		$this->templates->assign('post', $post);
+		
+		$post_group = $this->news->get_post_group($post->lang_group);
+		$this->templates->assign('post_group', $post_group);
 		
 		// Мета-теги
 		$this->templates->assign('meta_title', $post->meta_title);
@@ -41,7 +45,7 @@ class NewsView extends View
 	}	
 	
 	// Отображение списка постов
-	private function fetch_news()
+	private function fetch_news($section=null)
 	{
 		// Количество постов на 1 странице
 		$items_per_page = 20;
@@ -50,6 +54,9 @@ class NewsView extends View
 		
 		// Выбираем только видимые посты
 		$filter['visible'] = 1;
+		if($section)
+			$filter['section'] = $section;
+		$filter['language'] = $_SESSION['lang']->id;
 		
 		// Текущая страница в постраничном выводе
 		$current_page = $this->request->get('page', 'integer');
@@ -80,6 +87,8 @@ class NewsView extends View
 		// Метатеги
 		if($this->page)
 		{
+			$pages_group = $this->pages->get_pages_group($this->page->lang_group);
+			$this->templates->assign('pages_group', $pages_group);
 			$this->templates->assign('meta_title', $this->page->meta_title);
 			$this->templates->assign('meta_keywords', $this->page->meta_keywords);
 			$this->templates->assign('meta_description', $this->page->meta_description);

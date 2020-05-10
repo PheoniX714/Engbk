@@ -1,193 +1,317 @@
 {* Title *}
-{$meta_title='Список товаров' scope=parent}
-{$sm_groupe = 'catalog' scope=parent}
-{$sm_item = 'products' scope=parent}
-{$page_additional_css = '
-	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-' scope=parent}
+{$meta_title='Список товаров' scope='root'}
+{$sm_groupe = 'products' scope='root'}
+{$sm_item = 'products' scope='root'}
 
-{$page_additional_js = '
-	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/modules/products.js"></script>
-' scope=parent}
+{capture name=js}
+{literal}
+<script>
+	var products_list = document.getElementById('products_list');
+	var sortable = new Sortable(products_list, {
+		multiDrag: true,
+		selectedClass: 'bg-yellow-100',
+		handle: '.handle',
+		animation: 150,
+		ghostClass: 'bg-blue-100',
+		onEnd: function() {
+			$.ajax({url: document.location.href, type: "POST", dataType: "html", data: $('form').serialize()});
+		}
+	});
 
-<section class="content-header">
-	<h1>Каталог товаров</h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li class="active">Каталог товаров</li>
-	</ol>
-</section>
+	$(function () {
+		$("#check_all").change(function() {
+			if($('#check_all').hasClass('checked')){
+				$('#list .custom-control-input:not(:disabled)').attr('checked', false);
+				$('#check_all').removeClass('checked');
+			}else{
+				$('#list .custom-control-input:not(:disabled)').attr('checked', true);
+				$('#check_all').addClass('checked');
+			}
+		});		
+		  
+		$("button.visible").on('click', function(){
+			var icon        = $(this);
+			var line        = icon.closest("#list .todo-item");
+			var tag        	= line.find(".visible-tag");
+			var but         = icon.children(".icon-lightbulb");
+			var id          = line.find('input[type="checkbox"][name*="check"]').val();
+			var session_id  = icon.closest('form').find('input[type="hidden"][name*="session_id"]').val();
+			var state       = but.hasClass('enbl')?0:1;
+			$.ajax({
+				type: 'POST',
+				url: 'ajax/update_object.php',
+				data: {'object': 'product', 'id': id, 'values': {'visible': state}, 'session_id': session_id},
+				success: function(data){
+					if(!state){
+						but.removeClass('text-yellow-900 enbl');
+						tag.show();
+					}else{
+						but.addClass('text-yellow-900 enbl');
+						tag.hide();
+					}			
+				},
+				dataType: 'json'
+			});	
+			return false;
+		});
+		
+		$("button.featured").on('click', function(){
+			var icon        = $(this);
+			var line        = icon.closest("#list .todo-item");
+			var tag        	= line.find(".featured-tag");
+			var but         = icon.children(".icon-star");
+			var id          = line.find('input[type="checkbox"][name*="check"]').val();
+			var session_id  = icon.closest('form').find('input[type="hidden"][name*="session_id"]').val();
+			var state       = but.hasClass('enbl')?0:1;
+			$.ajax({
+				type: 'POST',
+				url: 'ajax/update_object.php',
+				data: {'object': 'product', 'id': id, 'values': {'featured': state}, 'session_id': session_id},
+				success: function(data){
+					if(!state){
+						but.addClass('text-grey-500');
+						but.removeClass('text-orange-900 enbl');
+						tag.show();
+					}else{
+						but.addClass('text-orange-900 enbl');
+						but.removeClass('text-grey-500');
+						tag.hide();
+					}			
+				},
+				dataType: 'json'
+			});	
+			return false;
+		});
+		
+		$("button.duplicate").on("click", function(){
+			$('#list .todo-item input[type="checkbox"][name*="check"]').prop('checked', false);
+			$(this).closest("#list .todo-item").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+			$(this).closest("form").find('select[name="action"] option[value=duplicate]').prop('selected', true);
+			$(this).closest("form").submit();
+			return false;
+		});
+		
+		$("button.delete").on("click", function(){
+			$('#list .todo-item input[type="checkbox"][name*="check"]').prop('checked', false);
+			$(this).closest("#list .todo-item").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+			$(this).closest("form").find('select[name="action"] option[value=delete]').prop('selected', true);
+			$(this).closest("form").submit();
+			return false;
+		});
+		
+		$("form").submit(function() {
+			if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
+				return false;	
+		});
+		
+	  });
+</script>
+{/literal}
+{/capture}
 
-<section class="content">
-<!-- Main row -->
-  <div class="row">
-	<!-- Left col -->
-	<form id="list_form" method="post">
-	<div class="col-md-10">
-	  <div class="box box-success"> 
-		<div class="box-header">
-		  <i class="fa fa-th-list"></i>
-		  <h3 class="box-title" style="line-height:1.5">Список товаров ({$products_count})</h3>
-		  <a href="index.php?module=ProductAdmin" class="btn btn-sm btn-primary btn-flat pull-right"><i class="fa fa-plus"></i> <b> Добавить товар</b></a>
-		</div>
-		<!-- /.box-header -->
-		<div class="box-body no-padding">
-			<input type="hidden" name="session_id" value="{$smarty.session.id}">   
-			<table class="table table-striped table-bordered table-hover tabled-view black-th sortable-table" id="functional-table">
-                <tbody>
-				<tr>
-					<th class="move-cell"></th>
-					<th class="checkbox-cell ln-inherit">
-						<input type="checkbox" class="minimal checkbox-toggle">
-					</th>
-					<th class="id-cell">ID</th>
-					<!-- <th class="sku-cell">Артикул</th> -->
-					<th>Товар</th>
-					<th>Цена</th>
-					<th class="actions-cell">Действия</th>
-				</tr>
-				{if $products}
-                {foreach $products as $product}
-				<tr class="c_item">
-					<td class="move-cell">
-						<input type="hidden" name="positions[{$product->id}]" value="{$product->position}">
-						<div class="move_zone"><i class="fa fa-bars"></i></div>
-					</td>
-					<td class="checkbox-cell">
-						<input type="checkbox" class="minimal" name="check[]" value="{$product->id|escape}">
-					</td>
-					<td class="id-cell">
-						{$product->id|escape}
-					</td>
-					<!-- <td class="sku-cell">
-						{$product->sku|escape}
-					</td> -->
-					<td class="product-cell">
-						{$image = $product->images|@first}
-						{if $image}
-						<a href="{url module=ProductAdmin id=$product->id}"><img src="{$image->filename|escape|resize:50:50}" /></a>
-						{/if}
-						<a href="{url module=ProductAdmin id=$product->id}">{$product->name|escape}</a>
-					</td>
-					<td class="price-cell">
-						<ul>
-						{foreach $product->variants as $variant}
-							<li {if !$variant@first}class="variant" style="display:none;"{/if}>
-								<div class="variant-name"><i>{$variant->name|escape|truncate:20:'…':true:true}</i></div>
-								<input style="max-width:90px" type="text" name="price[{$variant->id}]" value="{$variant->price}" class="form-control" />&nbsp;<label>{$currency->sign}</label>
-								<input class="form-control" type="text" name="stock[{$variant->id}]" value="{if $variant->infinity}∞{else}{$variant->stock}{/if}" style="max-width:60px;min-width:60px" />&nbsp;<label>{$settings->units}</label>
-							</li>
-						{/foreach}
-						</ul>
-					</td>
-					<td class="actions-cell">
-						<button class="featured btn btn-sm {if !$product->featured}btn-default{else}btn-warning act{/if} btn-flat btn-actions" ><i class="fa fa-fire"></i></button>						
-						<button class="enable btn btn-sm btn-flat {if !$product->visible}btn-default{else}btn-success act{/if} btn-actions" ><i class="fa fa-lightbulb-o"></i></button>
-						<a href="../products/{$product->url}" class="btn btn-sm btn-primary btn-flat btn-actions preview" target="_blank"><i class="fa fa-share"></i></a>
-						<a href="{url module=ProductAdmin id=$product->id }" class="btn btn-sm btn-flat btn-primary btn-actions"><i class="fa fa-pencil"></i></a>
-						<button class="delete btn btn-sm btn-flat btn-danger btn-actions" ><i class="fa fa-trash-o"></i></button>
-					</td>
-						
-				</tr>
-				{/foreach}
-				{else}
-				<tr>
-					<td colspan="7">
-						Товаров нет
-					</td>
-				</tr>
-				{/if}
-				</tbody>
-			</table>
-			<div class="col-lg-12">
-			{include file='pagination.tpl'}
+<div id="contacts" class="page-layout simple left-sidebar-floating">
+
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-file-multiple s-6"></i>
+					</span>
+					<span class="logo-text h4">Каталог товаров</span>
+				</div>
 			</div>
 		</div>
-		<!-- /.box-body -->		
-	  </div>
-	  <!-- /.box -->
-	  
-	  <div class="row">
-		<div class="form-group col-lg-3">
-			<select id="action" class="form-control" name="action">
-				<option value="enable">Сделать видимыми</option>
-				<option value="disable">Сделать невидимыми</option>
-				<option value="set_featured">Сделать рекомендуемым</option>
-				<option value="unset_featured">Отменить рекомендуемый</option>
-				<option value="duplicate">Создать дубликат</option>
-				<option value="delete">Удалить</option>
-			</select>
+		
+		<div class="col-auto">
+			<a href="{url module=ProductAdmin id=null}" class="btn btn-light fuse-ripple-ready"><i class="icon-plus mr-0 mr-md-2"></i><span class="m-none"> Добавить товар</span></a>
 		</div>
-		  
-		<div class="col-lg-2">
-			<button type="submit" class="btn btn-block btn-success btn-flat" value="Применить">Применить</button>
-		</div>
-	  </div>
 	</div>
-	</form>
-	<div class="col-md-2">
-		<div class="row">
+
+	<div class="page-content-wrapper">
+
+		<div class="page-content p-4 p-sm-6">
+		
 		<form method="get">
 			<input type="hidden" name="module" value="ProductsAdmin">
-			<div class="col-md-12" id="search">
-				<label>Поиск</label>
-				<div class="form-group">
-					<div class="input-group">
-						<input class="form-control" id="appendedInputButton" name="keyword" type="text" value="{$keyword|escape}">
-						<span class="input-group-btn">
-							<button class="btn btn-success btn-flat" type="submit" value=""><i class="fa fa-search"></i></button>
-						</span>
+			<div class="collapse {if $show_filters}show{/if}" id="filters">
+				<div class="card mb-3">
+					<div class="card-body d-flex align-items-end flex-wrap">
+						<div class="form-group pt-0 mb-2 col-12 col-sm-4 col-md-3">
+							<label for="filter_language">Язык перевода</label>
+							<select class="form-control" id="filter_language" name="filter_language">
+								{foreach $languages as $l}
+								<option value="{$l->id}" {if $filter_language == $l->id}selected{/if}>{$l->name|escape}</option>
+								{/foreach}	
+							</select>
+						</div>
+						<div class="form-group pt-0 mb-2 col-12 col-sm-4 col-md-3">
+							<label for="category_id">Категория товара</label>
+							<select class="form-control" id="category_id" name="category_id">
+								<option value=''>Все картегории</option>
+								{function name=category_select level=0}
+								{foreach $categories as $category}
+									<option value='{$category->id}' {if $category->id == $category_id}selected{/if} category_name='{$category->name|escape}'>{section name=sp loop=$level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$category->name|escape}</option>
+										{category_select categories=$category->subcategories category_id=$category_id  level=$level+1}
+								{/foreach}
+								{/function}
+								{category_select categories=$categories category_id=$category_id}
+							</select>
+						</div>
+						<div class="form-group pt-0 mb-2 col-12 col-sm-4 col-md-3">
+							<label for="filter">Фильтр по типу</label>
+							<select class="form-control" id="filter" name="filter">
+								<option value="" >Все товары</option>
+								<option value="featured" {if $filter == 'featured'}selected{/if}>Рекомендуемые</option>
+								<option value="discounted" {if $filter == 'discounted'}selected{/if}>Со скидкой</option>
+								<option value="visible" {if $filter == 'visible'}selected{/if}>Активные</option>
+								<option value="hidden" {if $filter == 'hidden'}selected{/if}>Неактивные</option>
+								<option value="in_stock" {if $filter == 'in_stock'}selected{/if}>Есть на складе</option>
+								<option value="outofstock" {if $filter == 'outofstock'}selected{/if}>Отсутствующие на складе</option>
+							</select>
+						</div>
+						<div class="col-12 col-sm-4 col-md-3">
+							<div class="form-group mb-2">
+								<input type="text" class="form-control" id="keyword" name="keyword" aria-describedby="meta_titleHelp" placeholder="Введите название товара" value="{$keyword|escape}" autocomplete="off">
+								<label for="keyword">Название товара</label>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer">
+						<div class="row">
+							<div class="col-12 text-right">
+								<a class="btn btn-danger text-white btn-sm" href="/engine/index.php?module=ProductsAdmin">Очистить</a>
+								<button class="btn btn-primary btn-sm" type="submit">Фильтровать</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-12">
-				<!-- Меню каталога -->
-				<div id="catalog_menu" style="margin-bottom:20px;">
-				{* Рекурсивная функция вывода дерева категорий *}
-				{if $categories}
-				<label>Фильтр по категории</label>
-				<select class="form-control" name="category_id">
-					<option value="" >Все товары</option>
-				{function name=category_select level=0}
-					{foreach from=$categories item=c}
-						<option value="{$c->id}" {if $c->id == $selected_id}selected{/if}>{section name=sp loop=$level}&nbsp;&nbsp;&nbsp;&nbsp;{/section}{$c->name|escape}</option>
-						{category_select categories=$c->subcategories selected_id=$selected_id  level=$level+1}
-					{/foreach}
-				{/function}
-				{category_select categories=$categories selected_id=$category->id}
-				</select>
-				{/if}
-				</div>
-			</div>
-			
-			<div class="col-md-12">
-				<!-- Меню каталога -->
-				<div style="margin-bottom:20px;">
-				<label>Фильтр по типу</label>
-				<select class="form-control" name="filter">
-					<option value="" >Все товары</option>
-					<option value="featured" {if $filter == 'featured'}selected{/if}>Рекомендуемые</option>
-					<option value="discounted" {if $filter == 'discounted'}selected{/if}>Со скидкой</option>
-					<option value="visible" {if $filter == 'visible'}selected{/if}>Активные</option>
-					<option value="hidden" {if $filter == 'hidden'}selected{/if}>Неактивные</option>
-					<option value="in_stock" {if $filter == 'in_stock'}selected{/if}>Есть на складе</option>
-					<option value="outofstock" {if $filter == 'outofstock'}selected{/if}>Отсутствующие на складе</option>
-				</select>
-				</div>
-			</div>
-			
-			<div class="col-md-6">
-				<a href="{url filter=null category_id=null keyword=null}" class="btn btn-block btn-danger btn-flat">Очистить</a>
-			</div>
-			<div class="col-md-6">
-				<button type="submit" class="btn btn-block btn-success btn-flat">Фильтровать</button>
-			</div>
-			
 		</form>
+		
+		<form method="post">
+		<input type="hidden" name="session_id" value="{$smarty.session.id}">		
+			<div id="todo" class="card">
+				
+				<div id="list" class="todo-items w-100">
+					<div class="todo-item pr-4 pl-11 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
+
+						<label id="check_all" class="custom-control custom-checkbox">
+							<input type="checkbox" class="custom-control-input" />
+							<span class="custom-control-indicator"></span>
+						</label>
+						
+						<div class="info col-2 px-4">
+							<div class="title d-flex justify-content-center align-items-center">
+								Изображение
+							</div>
+						</div>
+
+						<div class="info col px-4">
+
+							<div class="title d-flex justify-content-between align-items-center">
+								Название товара
+								
+								<button class="btn btn-icon pull-right" type="button" data-toggle="collapse" data-target="#filters" aria-expanded="false" aria-controls="filters"><i class="icon-settings" data-toggle="tooltip" data-placement="bottom" title="Открыть/Закрыть фильтры"></i></button>
+							</div>
+						</div>
+
+					</div>
+					<div id="products_list">
+						{foreach $products as $product}
+						<div class="todo-item sort-item pl-0 pr-2 py-4 row no-gutters d-flex flex-wrap flex-sm-nowrap align-items-center">
+
+							<div class="handle mr-1 px-2">
+								<i class="icon icon-drag"></i>
+							</div>
+							<input type="hidden" name="positions[{$product->id}]" value="{$product->position}">
+
+							<label class="custom-control custom-checkbox">
+								<input type="checkbox" class="custom-control-input" name="check[]" value="{$product->id}"/>
+								<span class="custom-control-indicator"></span>
+							</label>
+							<div class="info col-2 px-4 d-flex align-items-center justify-content-center">
+								{if $product->image}
+								<a class="image" href="{url module=ProductAdmin id=$product->id return=$smarty.server.REQUEST_URI}"><img src="{$product->image->filename|resize:150:100:w}"></a>
+								{else}
+								<a class="image" href="{url module=ProductAdmin id=$product->id return=$smarty.server.REQUEST_URI}"><img src="./templates/img/placeholder.png" width="150px" height="auto"></a>
+								{/if}
+							</div>
+							<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-start flex-column">
+
+								<div class="title mr-4 mb-2">
+									<a class="td-wh-none" style="word-break: break-all;" href="{url module=ProductAdmin id=$product->id return=$smarty.server.REQUEST_URI}">{$product->name|escape}</a>
+								</div>
+
+								<div class="tags">
+									<div class="tag badge visible-tag" {if $product->visible}style="display:none;"{/if}>
+										<div class="row no-gutters align-items-center">
+											<div class="tag-color mr-2 bg-red"></div>
+											<div class="tag-label">Отключен</div>
+										</div>
+									</div>
+									{if $product->need_translate and $product->need_translate|count > 0}
+									<div class="tag badge language-tag">
+										<div class="row no-gutters align-items-center">
+											<div class="tag-color mr-2 bg-red"></div>
+											<div class="tag-label">Отсутствуют переводы: {foreach $product->need_translate as $nt}<b>{$nt|upper}</b> {/foreach}</div>
+										</div>
+									</div>
+									{/if}
+								</div>
+							</div>
+
+							<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
+
+								<a href="{url module=ProductAdmin id=$product->id}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
+									<i class="icon icon-pencil text-blue"></i>
+								</a>
+								
+								<button type="button" class="btn btn-icon featured" data-toggle="tooltip" data-placement="bottom" title="Рекомендуемый товар">
+									<i class="icon icon-star {if $product->featured}text-orange-900 enbl{else}text-grey-500{/if}"></i>
+								</button>
+								
+								<button type="button" class="btn btn-icon visible" data-toggle="tooltip" data-placement="bottom" title="Вкл\Выкл товар">
+									<i class="icon icon-lightbulb {if $product->visible}text-yellow-900 enbl{/if}"></i>
+								</button>
+								
+								<button type="button" class="btn btn-icon duplicate" data-toggle="tooltip" data-placement="bottom" title="Дублировать товар">
+									<i class="icon icon-book-multiple-variant text-blue-600"></i>
+								</button>
+
+								<button type="button" class="btn btn-icon delete" data-toggle="tooltip" data-placement="bottom" title="Удалить">
+									<i class="icon icon-trash text-red"></i>
+								</button>
+
+							</div>
+						</div>
+						{/foreach}
+					</div>
+				</div>
+				
+				<div class="card-footer py-6">
+					<div class="row">
+						<div class="col-12 col-sm-4 col-md-3 mb-3 mb-sm-0">
+							<select id="action" class="form-control" name="action">
+								<option value="">Выберите действие</option>
+								<option value="enable">Отобразить на сайте</option>
+								<option value="disable">Отключить на сайте</option>
+								<option value="set_featured">Сделать рекомендуемым</option>
+								<option value="unset_featured">Убрать из рекомендуемых</option>
+								<option value="duplicate">Дублировать товар</option>
+								<option value="delete">Удалить</option>
+							</select>
+						</div>
+						  
+						<div class="col-12 col-md-2 col-sm-6 col-xs-6">
+							<button type="submit" class="btn btn-secondary btn-sm fuse-ripple-ready" value="Применить">Применить</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+		{include file='pagination.tpl'}
 		</div>
 	</div>
-  </div>
-</section>
+</div>

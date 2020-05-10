@@ -9,10 +9,7 @@ class Settings extends Engine
 	{
 		parent::__construct();
 		
-		// Выбираем из базы настройки
 		$this->db->query('SELECT name, value FROM __settings');
-
-		// и записываем их в переменную		
 		foreach($this->db->results() as $result)
 			if(!($this->vars[$result->name] = @unserialize($result->value)))
 				$this->vars[$result->name] = $result->value;

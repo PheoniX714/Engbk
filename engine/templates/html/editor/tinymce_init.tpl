@@ -3,6 +3,7 @@
 tinymce.init({
     selector: "textarea.editor_large,textarea.editor_small",
     language : "ru",
+	branding: false,
 	content_css : '/engine/templates/css/tinymce.css',
     plugins: [
         "advlist autolink lists link image charmap print preview hr anchor pagebreak",
@@ -15,6 +16,13 @@ tinymce.init({
    image_advtab: true ,
    paste_word_valid_elements: "b,strong,i,em,h1,h2",
    paste_as_text: true,
+   {literal}
+   link_class_list: [
+		{title: 'Нет', value: ''},
+		{title: 'Увеличение изображения', value: 'fancybox'}
+   ],
+   
+   {/literal}
    plugin_preview_width: 1026,
    fontsize_formats: '8pt 10pt 11pt 12pt 14pt 18pt 24pt 36pt',
    

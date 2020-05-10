@@ -1,5 +1,5 @@
 AddDefaultCharset UTF-8
-ErrorDocument 404 /page/404
+ErrorDocument 404 /404
 ErrorDocument 401 /password.php
 RewriteEngine on
 
@@ -7,7 +7,7 @@ RewriteEngine on
 RewriteRule	^admin/?$  engine [L]
 
 # Каталог товаров
-RewriteRule ^([a-z]{2})/catalog/([^/]+)/?$	index.php?module=ProductsView&lang=$1&category=$2 [L,QSA]
+RewriteRule ^([a-z]{2}/)?catalog/([^/]+)/?$	index.php?module=ProductsView&lang=$1&category=$2 [L,QSA]
 RewriteRule ^catalog/([^/]+)/?$	index.php?module=ProductsView&category=$1 [L,QSA]
 
 # Товары
@@ -24,23 +24,27 @@ RewriteRule ^order/([^/]+)/?$	index.php?module=OrderView&url=$1  [L,QSA]
 RewriteRule ^order/?$	index.php?module=OrderView  [L,QSA]
 
 # Google sitemap
-RewriteRule ^sitemap.xml?$	sitemap.php  [L,QSA]
+RewriteRule ^sitemap_([^/]+).xml?$ sitemap.php?section=$1 [L,QSA]
+RewriteRule ^sitemap.xml?$  sitemap.php [L,QSA]
 
-# Блог
-RewriteRule ^news/([^/]+)/?$	index.php?module=NewsView&url=$1 [L,QSA]
-RewriteRule ^news/?$			index.php?module=NewsView [L,QSA]
+# news
+RewriteRule ^([a-z]{2}/)?post/([^/]+)/?$	index.php?module=NewsView&lang=$1&url=$2 [L,QSA]
+RewriteRule ^([a-z]{2}/)?news/([^/]+)/?$	index.php?module=NewsView&lang=$1&section=$2 [L,QSA]
+RewriteRule ^([a-z]{2}/)?news/?$			index.php?module=NewsView&lang=$1 [L,QSA]
 
 # feedback
 RewriteRule ^([a-z]{2})/contact/?$	index.php?module=FeedbackView&lang=$1 [L,QSA]
 RewriteRule ^contact/?$	index.php?module=FeedbackView [L,QSA]
 
+# search
+RewriteRule ^([a-z]{2})/search/?$	index.php?module=SearchView&lang=$1 [L,QSA]
+RewriteRule ^search/?$	index.php?module=SearchView [L,QSA]
+
 # Статические страницы
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-
-RewriteRule ^([a-z]{2})/page/([^/]+)/?$	index.php?module=PageView&lang=$1&page_url=$2 [L,QSA]
-RewriteRule ^page/([^/]+)/?$	index.php?module=PageView&page_url=$1 [L,QSA]
-RewriteRule ^([a-z]{2})?/?$	index.php?module=MainView&lang=$1&page_url= [L,QSA]
+RewriteRule ^([a-z]{2}/)?([^/]{3,})/?$	index.php?module=PageView&lang=$1&page_url=$2 [L,QSA]
+RewriteRule ^([a-z]{2}/)?/?$	index.php?module=MainView&page_url=&lang=$1 [L,QSA]
 
 
 # Ресайз картинок на лету

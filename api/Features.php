@@ -7,30 +7,127 @@ class Features extends Engine
 	
 	function get_features($filter = array())
 	{
-		$category_id_filter = '';	
-		if(isset($filter['category_id']))
-			$category_id_filter = $this->db->placehold('AND id in(SELECT feature_id FROM __categories_features AS cf WHERE cf.category_id in(?@))', (array)$filter['category_id']);
-		
+		$limit = 1000;
+		$page = 1;
+		$translation_columns = '';
+		$translation_join = '';
+		$category_id_filter = '';
 		$in_filter_filter = '';	
+		$id_filter = '';	
+		$keyword_filter = '';
+
+		if(isset($filter['limit']))
+			$limit = max(1, intval($filter['limit']));
+
+		if(isset($filter['page']))
+			$page = max(1, intval($filter['page']));
+		
+		if(isset($filter['category_id']))
+			$category_id_filter = $this->db->placehold('AND f.id in(SELECT cf.feature_id FROM __categories_features AS cf WHERE cf.category_id in(?@))', (array)$filter['category_id']);
+	
 		if(isset($filter['in_filter']))
 			$in_filter_filter = $this->db->placehold('AND f.in_filter=?', intval($filter['in_filter']));
 		
-		$id_filter = '';	
+		if(isset($filter['language_id'])){
+			$translation_columns = $this->db->placehold(', ft.language_id, ft.name');
+			$translation_join = $this->db->placehold('LEFT JOIN __features_translations ft ON f.id = ft.feature_id AND ft.language_id=?', intval($filter['language_id']));
+		}
 		if(!empty($filter['id']))
 			$id_filter = $this->db->placehold('AND f.id in(?@)', (array)$filter['id']);
 		
+		if(!empty($filter['keyword']))
+		{
+			$keywords = explode(' ', $filter['keyword']);
+			foreach($keywords as $keyword)
+			{
+				$kw = $this->db->escape(trim($keyword));
+				if($kw!=='')
+					$keyword_filter .= $this->db->placehold(" AND (f.id in (SELECT ft.feature_id FROM __features_translations ft WHERE ft.name LIKE '%$kw%'))");				
+			}
+		}
+		
+		$sql_limit = $this->db->placehold(' LIMIT ?, ? ', ($page-1)*$limit, $limit);
+		
 		// Выбираем свойства
-		$query = $this->db->placehold("SELECT id, name, position, in_filter, language_id FROM __features AS f
-									WHERE 1
-									$category_id_filter $in_filter_filter $id_filter ORDER BY f.position");
+		$query = $this->db->placehold("SELECT f.id, f.position, f.in_filter $translation_columns FROM __features AS f
+									$translation_join WHERE 1 $category_id_filter $in_filter_filter $id_filter $keyword_filter ORDER BY f.position $sql_limit");
 		$this->db->query($query);
-		return $this->db->results();
+		$features = $this->db->results();
+		
+		if(isset($filter['language_id']) and !empty($features)){
+			$languages = $this->languages->get_languages();
+			$languages_codes = array();
+			foreach($languages as $l)
+				$languages_codes[$l->code] = $l->id;
+							
+			if(count($languages) > 1){
+				foreach($features as $f){
+					$existing_translations = array();
+					foreach($this->features->get_feature_group($f->id) as $fg)
+						$existing_translations[] = $fg->language_id;
+					$need_translate = array_diff($languages_codes, $existing_translations);
+					$f->need_translate = array_flip($need_translate);
+				}
+			}else{
+				foreach($features as $f){
+					$f->need_translate = '';
+				}
+			}
+		}
+		
+		return $features;
+	}
+	
+	function count_features($filter = array())
+	{	
+		$translation_columns = '';
+		$translation_join = '';
+		$category_id_filter = '';
+		$keyword_filter = '';
+		
+		if(isset($filter['limit']))
+			$limit = max(1, intval($filter['limit']));
+
+		if(isset($filter['page']))
+			$page = max(1, intval($filter['page']));
+		
+		if(isset($filter['category_id']))
+			$category_id_filter = $this->db->placehold('AND f.id in(SELECT cf.feature_id FROM __categories_features AS cf WHERE cf.category_id in(?@))', (array)$filter['category_id']);
+	
+		if(isset($filter['in_filter']))
+			$in_filter_filter = $this->db->placehold('AND f.in_filter=?', intval($filter['in_filter']));
+		
+		if(isset($filter['language_id'])){
+			$translation_columns = $this->db->placehold(', ft.language_id, ft.name');
+			$translation_join = $this->db->placehold('LEFT JOIN __features_translations ft ON f.id = ft.feature_id AND ft.language_id=?', intval($filter['language_id']));
+		}
+		if(!empty($filter['id']))
+			$id_filter = $this->db->placehold('AND f.id in(?@)', (array)$filter['id']);
+		
+		if(!empty($filter['keyword']))
+		{
+			$keywords = explode(' ', $filter['keyword']);
+			foreach($keywords as $keyword)
+			{
+				$kw = $this->db->escape(trim($keyword));
+				if($kw!=='')
+					$keyword_filter .= $this->db->placehold(" AND (f.id in (SELECT ft.feature_id FROM __features_translations ft WHERE ft.name LIKE '%$kw%'))");				
+			}
+		}
+		
+		$query = "SELECT COUNT(distinct f.id) as count
+		          FROM __features AS f $translation_join WHERE 1 $category_id_filter $in_filter_filter $id_filter $keyword_filter";
+
+		if($this->db->query($query))
+			return $this->db->result('count');
+		else
+			return false;
 	}
 		
 	function get_feature($id)
 	{
 		// Выбираем свойство
-		$query = $this->db->placehold("SELECT id, name, position, in_filter, language_id FROM __features WHERE id=? LIMIT 1", $id);
+		$query = $this->db->placehold("SELECT id, position, in_filter FROM __features WHERE id=? LIMIT 1", $id);
 		$this->db->query($query);
 		$feature = $this->db->result();
 
@@ -71,7 +168,9 @@ class Features extends Engine
 			$query = $this->db->placehold("DELETE FROM __options WHERE feature_id=?", intval($id));
 			$this->db->query($query);	
 			$query = $this->db->placehold("DELETE FROM __categories_features WHERE feature_id=?", intval($id));
-			$this->db->query($query);	
+			$this->db->query($query);
+			$query = $this->db->placehold("DELETE FROM __features_translations WHERE feature_id=?", intval($id));
+			$this->db->query($query);
 		}
 	}
 	
@@ -189,7 +288,7 @@ class Features extends Engine
 	
 	public function get_product_options($product_id)
 	{
-		$query = $this->db->placehold("SELECT f.id as feature_id, f.name, f.language_id, po.value, po.product_id FROM __options po LEFT JOIN __features f ON f.id=po.feature_id
+		$query = $this->db->placehold("SELECT f.id as feature_id, ft.name, ft.language_id, po.value, po.product_id FROM __options po LEFT JOIN __features f ON f.id=po.feature_id LEFT JOIN __features_translations ft ON f.id=ft.feature_id
 										WHERE po.product_id in(?@) ORDER BY f.position", (array)$product_id);
 
 		$this->db->query($query);
@@ -199,5 +298,61 @@ class Features extends Engine
 	}
 	
 
+	public function get_feature_translation($id, $language_id=null)
+	{
+		$where = $this->db->placehold('feature_id=? ', intval($id));
+		
+		if(!empty($language_id))
+			$where .= $this->db->placehold('AND language_id=?', intval($language_id));
+		
+		
+		$query = "SELECT feature_id, language_id, name
+		          FROM __features_translations WHERE $where LIMIT 1";
+		
+		$this->db->query($query);
+		return $this->db->result();
+	}
+	
+	public function get_feature_translations($language_id)
+	{
+		$where = $this->db->placehold(' WHERE language_id=?', intval($language_id));
+		
+		$query = "SELECT feature_id, language_id, name FROM __features_translations $where ORDER BY feature_id";
 
+		$this->db->query($query);
+		return $this->db->results();
+	}
+	
+	public function add_feature_translation($translation)
+	{	
+		$query = $this->db->placehold('INSERT INTO __features_translations SET ?%', $translation);
+		if(!$this->db->query($query))
+			return false;
+		
+		return true;
+	}
+	
+	public function delete_feature_translation($id, $language_id)
+	{
+		if(!empty($id))
+		{
+			$query = $this->db->placehold("DELETE FROM __features_translations WHERE feature_id=? AND language_id=? LIMIT 1", intval($id), intval($language_id));
+			if($this->db->query($query))
+				return true;
+		}
+		return false;
+	}	
+	public function get_feature_group($id)
+	{
+		$where = $this->db->placehold(' WHERE feature_id=?', intval($id));
+		
+		$query = "SELECT feature_id, language_id, name FROM __features_translations $where ";
+
+		$this->db->query($query);
+		$cg = array();
+		foreach($this->db->results() as $c){
+			$cg[$c->language_id] = $c;
+		}
+		return $cg;
+	}	
 }

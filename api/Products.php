@@ -21,7 +21,6 @@ class Products extends Engine
 		$limit = 100;
 		$page = 1;
 		$category_id_filter = '';
-		$colors_id_filter = '';
 		$brand_id_filter = '';
 		$product_id_filter = '';
 		$features_filter = '';
@@ -30,8 +29,9 @@ class Products extends Engine
 		$is_featured_filter = '';
 		$discounted_filter = '';
 		$in_stock_filter = '';
-		$first_in_group = '';
 		$group_by = '';
+		$translation_columns = '';
+		$translation_join = '';
 		$order = 'p.position DESC';
 
 		if(isset($filter['limit']))
@@ -54,9 +54,6 @@ class Products extends Engine
 		if(!empty($filter['brand_id']))
 			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
 		
-		if(!empty($filter['colors']))
-			$colors_id_filter = $this->db->placehold('AND p.color in(?@)', (array)$filter['colors']);
-
 		if(isset($filter['featured']))
 			$is_featured_filter = $this->db->placehold('AND p.featured=?', intval($filter['featured']));
 
@@ -66,15 +63,9 @@ class Products extends Engine
 		if(isset($filter['in_stock']))
 			$in_stock_filter = $this->db->placehold('AND (SELECT count(*)>0 FROM __variants pv WHERE pv.product_id=p.id AND pv.price>0 AND (pv.stock IS NULL OR pv.stock>0) LIMIT 1) = ?', intval($filter['in_stock']));
 
-		if(!empty($filter['visible']))
+		if(isset($filter['visible']))
 			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
-		
-		if(isset($filter['visible_admin']))
-			$visible_filter = $this->db->placehold('AND p.visible=?', intval($filter['visible_admin']));
-		
-		if(!empty($filter['first_in']))
-			$first_in_group = $this->db->placehold('AND (SELECT pgi.position FROM __products_groups_items AS pgi WHERE p.id = pgi.product_id LIMIT 1) = 0');
-
+				
  		if(!empty($filter['sort']))
 			switch ($filter['sort'])
 			{
@@ -106,41 +97,37 @@ class Products extends Engine
 			{
 				$kw = $this->db->escape(trim($keyword));
 				if($kw!=='')
-					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
+					$keyword_filter .= $this->db->placehold("AND (p.id in (SELECT product_id FROM __products_translations WHERE name LIKE '%$kw%'))");
 			}
+		}
+		
+		if(isset($filter['language_id'])){
+			$translation_columns = $this->db->placehold(', pt.language_id, pt.name, pt.meta_title, pt.meta_description, pt.meta_keywords, pt.annotation, pt.body, pt.url');
+			$translation_join = $this->db->placehold('LEFT JOIN __products_translations pt ON p.id = pt.product_id AND pt.language_id=?', intval($filter['language_id']));
 		}
 
 		if(!empty($filter['features']) && !empty($filter['features']))
 			foreach($filter['features'] as $feature=>$value)
-				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, $value);
-				
+				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, (array)$value);
+		
 		if(!empty($filter['min_price']) && !empty($filter['max_price']))
 			$prices = $this->db->placehold('AND p.id in(SELECT v.product_id FROM __variants v WHERE v.price >= ? AND v.price <= ? AND v.product_id = p.id)', intval($filter['min_price']), intval($filter['max_price']));
 
 		$query = "SELECT  
 					p.id,
-					p.url,
 					p.brand_id,
-					p.name,
-					p.visible_name,
-					p.annotation,
-					p.body,
-					p.color,
 					p.position,
 					p.created as created,
 					p.visible, 
-					p.featured, 
-					p.meta_title, 
-					p.meta_keywords, 
-					p.meta_description
-				FROM __products p		
-				$category_id_filter 
+					p.featured
+					$translation_columns
+				FROM __products p	
+				$translation_join
+				$category_id_filter
 				WHERE 
 					1
 					$product_id_filter
 					$brand_id_filter
-					$colors_id_filter
-					$first_in_group
 					$features_filter
 					$keyword_filter
 					$is_featured_filter
@@ -151,10 +138,33 @@ class Products extends Engine
 				$group_by
 				ORDER BY $order
 					$sql_limit";
-		
+					
 		$this->db->query($query);
+		
+		$products = $this->db->results();
+		
+		if(isset($filter['need_translate'])){
+			$languages = $this->languages->get_languages();
+			$languages_codes = array();
+			foreach($languages as $l)
+				$languages_codes[$l->code] = $l->id;
+							
+			if(count($languages) > 1){
+				foreach($products as $p){
+					$existing_translations = array();
+					foreach($this->products->get_product_group($p->id) as $pg)
+						$existing_translations[] = $pg->language_id;
+					$need_translate = array_diff($languages_codes, $existing_translations);
+					$p->need_translate = array_flip($need_translate);
+				}
+			}else{
+				foreach($products as $p){
+					$p->need_translate = '';
+				}
+			}
+		}
 
-		return $this->db->results();
+		return $products;
 	}
 
 	/**
@@ -169,28 +179,20 @@ class Products extends Engine
 	{		
 		$category_id_filter = '';
 		$brand_id_filter = '';
-		$colors_id_filter = '';
 		$product_id_filter = '';
 		$keyword_filter = '';
 		$visible_filter = '';
 		$is_featured_filter = '';
 		$in_stock_filter = '';
-		$first_in_group = '';
 		$discounted_filter = '';
 		$features_filter = '';
 		
 		if(!empty($filter['category_id']))
 			$category_id_filter = $this->db->placehold('INNER JOIN __products_categories pc ON pc.product_id = p.id AND pc.category_id in(?@)', (array)$filter['category_id']);
 		
-		if(!empty($filter['not_in_category_id']))
-			$category_id_filter = $this->db->placehold('INNER JOIN __products_categories pc ON pc.product_id = p.id AND pc.category_id not in(?@)', (array)$filter['not_in_category_id']);
-		
 		if(!empty($filter['brand_id']))
 			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
 		
-		if(!empty($filter['colors']))
-			$colors_id_filter = $this->db->placehold('AND p.color in(?@)', (array)$filter['colors']);
-
 		if(!empty($filter['id']))
 			$product_id_filter = $this->db->placehold('AND p.id in(?@)', (array)$filter['id']);
 		
@@ -214,19 +216,12 @@ class Products extends Engine
 		if(isset($filter['discounted']))
 			$discounted_filter = $this->db->placehold('AND (SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = ?', intval($filter['discounted']));
 
-		if(!empty($filter['visible']))
+		if(isset($filter['visible']))
 			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
-		
-		if(isset($filter['visible_admin']))
-			$visible_filter = $this->db->placehold('AND p.visible=?', intval($filter['visible_admin']));
-		
 		
 		if(!empty($filter['features']) && !empty($filter['features']))
 			foreach($filter['features'] as $feature=>$value)
-				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, $value);
-				
-		if(!empty($filter['first_in']))
-			$first_in_group = $this->db->placehold('AND (SELECT pgi.position FROM __products_groups_items AS pgi WHERE p.id = pgi.product_id LIMIT 1) = 0');
+				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, (array)$value);
 		
 		if(!empty($filter['min_price']) && !empty($filter['max_price']))
 			$prices = $this->db->placehold('AND p.id in(SELECT v.product_id FROM __variants v WHERE v.price >= ? AND v.price <= ? AND v.product_id = p.id)', intval($filter['min_price']), intval($filter['max_price']));
@@ -236,10 +231,8 @@ class Products extends Engine
 				$category_id_filter
 				WHERE 1
 					$brand_id_filter
-					$colors_id_filter
 					$product_id_filter
 					$keyword_filter
-					$first_in_group
 					$is_featured_filter
 					$in_stock_filter
 					$discounted_filter
@@ -261,29 +254,16 @@ class Products extends Engine
 	{
 		if(is_int($id))
 			$filter = $this->db->placehold('p.id = ?', $id);
-		else
-			$filter = $this->db->placehold('p.url = ?', $id);
 			
-		$query = "SELECT DISTINCT
+		$query = "SELECT
 					p.id,
-					p.url,
 					p.brand_id,
-					p.name,
-					p.visible_name,
-					p.annotation,
-					p.body,
-					p.color,
 					p.position,
 					p.created as created,
 					p.visible, 
-					p.featured, 
-					p.meta_title, 
-					p.meta_keywords, 
-					p.meta_description
+					p.featured
 				FROM __products AS p
-                WHERE $filter
-                GROUP BY p.id
-                LIMIT 1";
+                WHERE $filter LIMIT 1";
 		$this->db->query($query);
 		$product = $this->db->result();
 		return $product;
@@ -291,7 +271,7 @@ class Products extends Engine
 
 	public function update_product($id, $product)
 	{
-		$query = $this->db->placehold("UPDATE __products SET ?% WHERE id in (?@) LIMIT ?", $product, (array)$id, count((array)$id));
+		$query = $this->db->placehold("UPDATE __products SET ?% WHERE id in (?@)", $product, (array)$id, count((array)$id));
 		if($this->db->query($query))
 			return $id;
 		else
@@ -302,20 +282,6 @@ class Products extends Engine
 	{	
 		$product = (array) $product;
 		
-		if(empty($product['url']))
-		{
-			$product['url'] = preg_replace("/[\s]+/ui", '-', $product['name']);
-			$product['url'] = strtolower(preg_replace("/[^0-9a-zа-я\-]+/ui", '', $product['url']));
-		}
-
-		// Если есть товар с таким URL, добавляем к нему число
-		while($this->get_product((string)$product['url']))
-		{
-			if(preg_match('/(.+)_([0-9]+)$/', $product['url'], $parts))
-				$product['url'] = $parts[1].'_'.($parts[2]+1);
-			else
-				$product['url'] = $product['url'].'_2';
-		}
 		if($this->db->query("INSERT INTO __products SET ?%", $product))
 		{
 			$id = $this->db->insert_id();
@@ -324,87 +290,7 @@ class Products extends Engine
 		}
 		else
 			return false;
-	}
-	
-	public function get_products_colors($filter = array())
-	{		
-		// По умолчанию
-		$category_id_filter = '';
-		$brand_id_filter = '';
-		$product_id_filter = '';
-		$features_filter = '';
-		$keyword_filter = '';
-		$visible_filter = '';
-		$is_featured_filter = '';
-		$discounted_filter = '';
-		$in_stock_filter = '';
-		$first_in_group = '';
-		$group_by = '';
-		
-		if(!empty($filter['id']))
-			$product_id_filter = $this->db->placehold('AND p.id in(?@)', (array)$filter['id']);
-
-		if(!empty($filter['category_id']))
-		{
-			$category_id_filter = $this->db->placehold('INNER JOIN __products_categories pc ON pc.product_id = p.id AND pc.category_id in(?@)', (array)$filter['category_id']);
-			$group_by = "GROUP BY p.id";
-		}
-		
-		if(!empty($filter['brand_id']))
-			$brand_id_filter = $this->db->placehold('AND p.brand_id in(?@)', (array)$filter['brand_id']);
-
-		if(isset($filter['featured']))
-			$is_featured_filter = $this->db->placehold('AND p.featured=?', intval($filter['featured']));
-
-		if(isset($filter['discounted']))
-			$discounted_filter = $this->db->placehold('AND (SELECT 1 FROM __variants pv WHERE pv.product_id=p.id AND pv.compare_price>0 LIMIT 1) = ?', intval($filter['discounted']));
-
-		if(isset($filter['in_stock']))
-			$in_stock_filter = $this->db->placehold('AND (SELECT count(*)>0 FROM __variants pv WHERE pv.product_id=p.id AND pv.price>0 AND (pv.stock IS NULL OR pv.stock>0) LIMIT 1) = ?', intval($filter['in_stock']));
-
-		if(!empty($filter['visible']))
-			$visible_filter = $this->db->placehold('AND p.visible=? AND (SELECT count(*) FROM __categories, __products_categories WHERE __categories.id = __products_categories.category_id AND __categories.visible=1 AND p.id=__products_categories.product_id) > 0', intval($filter['visible']));
-		
-		if(!empty($filter['keyword']))
-		{
-			$keywords = explode(' ', $filter['keyword']);
-			foreach($keywords as $keyword)
-			{
-				$kw = $this->db->escape(trim($keyword));
-				if($kw!=='')
-					$keyword_filter .= $this->db->placehold("AND (p.name LIKE '%$kw%' OR p.visible_name LIKE '%$kw%' OR p.meta_keywords LIKE '%$kw%' OR p.id LIKE '%$kw%' OR p.id in (SELECT product_id FROM __variants WHERE sku LIKE '%$kw%'))");
-			}
-		}
-
-		if(!empty($filter['features']) && !empty($filter['features']))
-			foreach($filter['features'] as $feature=>$value)
-				$features_filter .= $this->db->placehold('AND p.id in (SELECT product_id FROM __options WHERE feature_id=? AND value in (?@) ) ', $feature, $value);
-
-		$query = "SELECT p.color FROM __products p 
-				$category_id_filter 
-				WHERE 
-					1
-					$product_id_filter
-					$brand_id_filter
-					$first_in_group
-					$features_filter
-					$keyword_filter
-					$is_featured_filter
-					$discounted_filter
-					$in_stock_filter
-					$visible_filter
-				GROUP BY p.color
-				ORDER BY p.color";
-		
-		$this->db->query($query);
-		
-		$results = array();
-		foreach($r = $this->db->results() as $c)
-			$results[] = $c->color;
-			
-		return $results;
-	}
-	
+	}	
 	
 	/*
 	*
@@ -444,6 +330,9 @@ class Products extends Engine
 			$query = $this->db->placehold("DELETE FROM __related_products WHERE related_id=?", intval($id));
 			$this->db->query($query);
 			
+			$query = $this->db->placehold("DELETE FROM __products_translations WHERE product_id=?", intval($id));
+			$this->db->query($query);
+			
 			// Удаляем отзывы
 			/* $comments = $this->comments->get_comments(array('object_id'=>$id, 'type'=>'product'));
 			foreach($comments as $c)
@@ -464,13 +353,14 @@ class Products extends Engine
 	{
     	$product = $this->get_product($id);
     	$product->id = null;
+		$product->name = $product->name.' (дубликат)';
     	$product->external_id = '';
     	$product->created = null;
 
 		// Сдвигаем товары вперед и вставляем копию на соседнюю позицию
     	$this->db->query('UPDATE __products SET position=position+1 WHERE position>?', $product->position);
     	$new_id = $this->products->add_product($product);
-    	$this->db->query('UPDATE __products SET position=? WHERE id=?', $product->position+1, $new_id);
+    	$this->db->query('UPDATE __products SET position=?, lang_group=? WHERE id=?', $product->position+1, $new_id, $new_id);
     	
     	// Генерируем новый url
     	$this->db->query('UPDATE __products SET url=? WHERE id=?', $product->url."-".$new_id ,$new_id);
@@ -613,89 +503,38 @@ class Products extends Engine
 		}
 	}
 	
-	// Мультиязычность
-	public function get_products_translation($filter = array())
-	{		
-		// По умолчанию
-		$product_id_filter = '';
-		$language_filter = '';
-		$order = 't.product_id DESC';
-
-		if(!empty($filter['id']))
-			$product_id_filter = $this->db->placehold('AND t.product_id in(?@)', (array)$filter['id']);
-
-		if(isset($filter['language_id']))
-			$language_filter = $this->db->placehold('AND t.language_id = ?', intval($filter['language_id']));
-					
-		$query = "SELECT
-					t.product_id,
-					t.language_id,
-					t.name,
-					t.visible_name,
-					t.annotation,
-					t.body,
-					t.meta_title, 
-					t.meta_keywords, 
-					t.meta_description
-				FROM __products_translations AS t
-				WHERE 
-					1
-					$product_id_filter
-					$language_filter
-				ORDER BY $order";
+	public function get_product_translation($id, $language_id=null)
+	{
+		if(gettype($id) == 'string')
+			$where = $this->db->placehold('url=? ', $id);
+		else
+			$where = $this->db->placehold('product_id=? ', intval($id));
+		
+		if(!empty($language_id))
+			$where .= $this->db->placehold('AND language_id=?', intval($language_id));
+		
+		$query = "SELECT product_id, language_id, name, meta_title, meta_description, meta_keywords, annotation, body, url
+		          FROM __products_translations WHERE $where LIMIT 1";
 		
 		$this->db->query($query);
+		return $this->db->result();
+	}
+	
+	public function get_product_translations($language_id)
+	{
+		$where = $this->db->placehold(' WHERE language_id=?', intval($language_id));
+		
+		$query = "SELECT product_id, language_id, name, meta_title, meta_description, meta_keywords, annotation, body, url FROM __products_translations $where ORDER BY product_id";
 
+		$this->db->query($query);
 		return $this->db->results();
 	}
-	public function get_product_translation($product_id, $language_id)
-	{
-		$query = "SELECT
-					t.product_id,
-					t.language_id,
-					t.name,
-					t.visible_name,
-					t.annotation,
-					t.body,
-					t.meta_title, 
-					t.meta_keywords, 
-					t.meta_description
-				FROM __products_translations AS t
-				WHERE t.product_id = $product_id AND t.language_id = $language_id
-				LIMIT 1";
-		$this->db->query($query);
-		$product = $this->db->result();
-		return $product;
-	}
 	
-	public function add_product_translation($translation)
-	{	
-		$translation = (array) $translation;
-		
-		if($translation['product_id']){
-			$this->db->query("INSERT INTO __products_translations SET ?%", $translation);
-			return true;
-		}else
-			return false;
-	}
-	
-	public function delete_product_translation($product_id, $language_id)
-	{
-		if(!empty($product_id) and !empty($language_id))
-		{
-			$query = $this->db->placehold("DELETE FROM __products_translations WHERE product_id=? and language_id=? LIMIT 1", intval($product_id), intval($language_id));
-			if($this->db->query($query))
-				return true;			
-		}
-		return false;
-	}
-	
-	
-	//Группы товаров
-	public function get_groups($filter = array())
+	public function get_products_translations($filter = array())
 	{
 		$limit = 100;
 		$page = 1;
+		$visible_filter = '';
 		
 		if(isset($filter['limit']))
 			$limit = max(1, intval($filter['limit']));
@@ -705,145 +544,73 @@ class Products extends Engine
 
 		$sql_limit = $this->db->placehold(' LIMIT ?, ? ', ($page-1)*$limit, $limit);
 		
-		$query = "SELECT DISTINCT
-					gp.id,
-					gp.group_code,
-					gp.visible
-				FROM __products_groups AS gp
-                GROUP BY gp.id $sql_limit";
+		if(isset($filter['visible']))
+			$visible_filter = $this->db->placehold('INNER JOIN __products p ON p.id = pt.product_id AND p.visible=?', intval($filter['visible']));
+				
+		$query = "SELECT pt.product_id, pt.language_id, pt.name, pt.url FROM __products_translations pt $visible_filter ORDER BY pt.product_id $sql_limit";
 		$this->db->query($query);
-		$groups = $this->db->results();
-		return $groups;
+		return $this->db->results();
 	}
 	
-	public function count_groups($filter = array())
-	{		
-		$query = "SELECT count(distinct gp.id) as count
-				FROM __products_groups AS gp";
-
-		$this->db->query($query);	
+	public function count_products_translations($filter = array())
+	{
+		$visible_filter = '';
+		
+		if(isset($filter['visible']))
+			$visible_filter = $this->db->placehold('INNER JOIN __products p ON p.id = pt.product_id AND p.visible=?', intval($filter['visible']));
+				
+		$query = "SELECT count(distinct pt.product_id) as count FROM __products_translations pt $visible_filter";
+		$this->db->query($query);
 		return $this->db->result('count');
 	}
 	
-	public function get_group($id)
-	{
-		if(is_int($id))
-			$filter = $this->db->placehold('gp.id = ?', $id);
-		else
-			$filter = $this->db->placehold('gp.group_code = ?', $id);
-			
-		$query = "SELECT DISTINCT
-					gp.id,
-					gp.group_code,
-					gp.visible
-				FROM __products_groups AS gp
-                WHERE $filter
-                GROUP BY gp.id
-                LIMIT 1";
-		$this->db->query($query);
-		$group = $this->db->result();
-		return $group;
-	}
-	
-	public function update_group($id, $group)
-	{
-		$query = $this->db->placehold("UPDATE __products_groups SET ?% WHERE id in (?@) LIMIT ?", $group, (array)$id, count((array)$id));
-		if($this->db->query($query))
-			return $id;
-		else
-			return false;
-	}
-	
-	public function add_group($group)
+	public function add_product_translation($translation)
 	{	
-		$group = (array) $group;
-				
-		if($this->db->query("INSERT INTO __products_groups SET ?%", $group))
+		$translation = (array)$translation;
+		if(empty($translation['url']))
 		{
-			$id = $this->db->insert_id();
-			return $id;
+			$translation['url'] = preg_replace("/[\s]+/ui", '-', $translation['name']);
+			$translation['url'] = strtolower(preg_replace("/[^0-9a-zа-я\-]+/ui", '', $translation['url']));
 		}
-		else
+
+		// Если есть товар с таким URL, добавляем к нему число
+		while($this->get_product_translation((string)$translation['url']))
+		{
+			if(preg_match('/(.+)_([0-9]+)$/', $translation['url'], $parts))
+				$translation['url'] = $parts[1].'_'.($parts[2]+1);
+			else
+				$translation['url'] = $translation['url'].'_2';
+		}
+	
+		$query = $this->db->placehold('INSERT INTO __products_translations SET ?%', $translation);
+		if(!$this->db->query($query))
 			return false;
-	}
-	
-	public function get_group_products($group_id)
-	{		
-		$group_id_filter = $this->db->placehold('AND group_id=?', intval($group_id));
-			
-		$query = "SELECT
-					group_id,
-					product_id,
-					position
-				FROM __products_groups_items
-				WHERE 
-					1
-					$group_id_filter
-				ORDER BY position";
-
-		$this->db->query($query);
-		return $this->db->results();
-	}
-	
-	public function get_group_product($product_id)
-	{		
-		$product_id_filter = $this->db->placehold('AND product_id=?', intval($product_id));
-			
-		$query = "SELECT
-					group_id,
-					product_id,
-					position
-				FROM __products_groups_items
-				WHERE 
-					1
-					$product_id_filter
-				LIMIT 1";
-
-		$this->db->query($query);
-		return $this->db->result();
-	}
-	public function get_products_groups($product_ids)
-	{		
-		$product_id_filter = $this->db->placehold('AND product_id in(?@)', (array)$product_ids);
-			
-		$query = "SELECT
-					group_id,
-					product_id,
-					position
-				FROM __products_groups_items
-				WHERE 
-					1
-					$product_id_filter";
-
-		$this->db->query($query);
-		return $this->db->results();
-	}
-	
-	public function add_group_product($product_id, $group_id, $position=0)
-	{
-		$query = $this->db->placehold("INSERT IGNORE INTO __products_groups_items SET product_id=?, group_id=?, position=?", $product_id, $group_id, $position);
-		$this->db->query($query);
-		return $group_id;
-	}
-	
-	public function delete_group($group_id)
-	{
 		
-		$this->delete_group_products($group_id);
+		return true;
+	}
+	
+	public function delete_product_translation($id, $language_id)
+	{
+		if(!empty($id))
+		{
+			$query = $this->db->placehold("DELETE FROM __products_translations WHERE product_id=? AND language_id=? LIMIT 1", intval($id), intval($language_id));
+			if($this->db->query($query))
+				return true;
+		}
+		return false;
+	}	
+	public function get_product_group($id)
+	{
+		$where = $this->db->placehold(' WHERE product_id=?', intval($id));
 		
-		$query = $this->db->placehold("DELETE FROM __products_groups WHERE id=?", intval($group_id));
+		$query = "SELECT product_id, language_id, name, url FROM __products_translations $where ";
+
 		$this->db->query($query);
+		$cg = array();
+		foreach($this->db->results() as $c){
+			$cg[$c->language_id] = $c;
+		}
+		return $cg;
 	}
 	
-	public function delete_group_product($product_id, $group_id)
-	{
-		$query = $this->db->placehold("DELETE FROM __products_groups_items WHERE product_id=? AND group_id=? LIMIT 1", intval($product_id), intval($group_id));
-		$this->db->query($query);
-	}
-	
-	public function delete_group_products($group_id)
-	{
-		$query = $this->db->placehold("DELETE FROM __products_groups_items WHERE group_id=?", intval($group_id));
-		$this->db->query($query);
-	}
 }

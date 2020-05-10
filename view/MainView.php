@@ -8,22 +8,9 @@ class MainView extends View
 	function fetch()
 	{		
 		$page_url = '';
-		$page = $this->pages->get_page((string)$page_url);
-		
-		$language_id = $_SESSION['lang']->id;
-						
-		if($language_id > 1){
-			$translation = $this->pages->get_page_translation(intval($page->id), intval($language_id));
-		}
-		
-		if($translation){
-			$page->header = $translation->header;
-			$page->name = $translation->name;
-			$page->meta_title = $translation->meta_title;
-			$page->meta_keywords = $translation->meta_keywords;
-			$page->meta_description = $translation->meta_description;
-			$page->body = $translation->body;
-		}
+		$translation = $this->pages->get_page_translation((string)$page_url, $_SESSION['lang']->id);
+		$page = $this->pages->get_page($translation->page_id);
+		$page = (object)array_merge((array)$page, (array)$translation);
 		
 		if($page)
 		{

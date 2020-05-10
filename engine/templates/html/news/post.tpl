@@ -1,166 +1,311 @@
-{$sm_groupe = 'news' scope=parent}
-{$sm_item = 'news' scope=parent}
+{$sm_groupe = 'news' scope='root'}
+{$sm_item = 'news' scope='root'}
 {if $post->id}
-{$meta_title = $post->name scope=parent}
+{$meta_title = $post->name scope='root'}
 {else}
-{$meta_title = 'Новая страница' scope=parent}
+{$meta_title = 'Новая страница' scope='root'}
 {/if}
-{$page_additional_css = '
-	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-	<link rel="stylesheet" href="./templates/js/fancybox/jquery.fancybox.min.css">
-' scope=parent}
-{$page_additional_js = '
-	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/fancybox/jquery.fancybox.min.js"></script>
-	<script src="./templates/js/content.js"></script>
-	<script src="./templates/js/autotags_post.js"></script>
-	<script>
-		 $(".iframe-btn").fancybox({	
-			"width"		: 900,
-			"height"	: 600,
-			"type"		: "iframe",
-				"autoScale"    	: false
-			});
-	</script>
-' scope=parent}
-<section class="content-header">
-	<h1>{if $post->id}{$post->name}{else}Новая новость{/if} <small>{if $post->id}Редактирование{else}Создание{/if} новости</small></h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li><a href="{url module=NewsAdmin}">Новости</a></li>
-		<li class="active">{if $post->id}{$post->name}{else}Новая новость{/if}</li>
-	</ol>
-</section>
 
 {* Подключаем Tiny MCE *}
 {include file='editor/tinymce_init.tpl'}
 
-<section class="content">
-	<div class="row">
-		{if $message_success}
-		<div class="col-md-12">
-			<div class="alert alert-success alert-dismissible">
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-				<h4><i class="icon fa fa-check"></i> {if $message_success == 'added'}Новость добавлена{elseif $message_success == 'updated'}Новость обновлена{/if}</h4>
+{capture name=js}
+{literal}
+<script>		
+	$('.del-preview').on('click',function(){
+		$('.page-preview').hide();
+		$('.preview-placeholder').show();
+		$('#del_preview').val(1);
+	});
+	
+	$('.page-content').on('click', '#copy_url', function() {
+		var $temp = $("<input>");
+		$("body").append($temp);
+		$temp.val($('#post_url').attr('href')).select();
+		document.execCommand("copy");
+		$temp.remove();
+	});
+</script>
+{/literal}
+{/capture}
+
+<div id="contacts" class="page-layout simple left-sidebar-floating">
+
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-file s-6"></i>
+					</span>
+					<span class="logo-text h4">{if $post->id}{$post->name}{else}Новая новость{/if}</span>
+				</div>
+			</div>
+		</div>
+		{if $post->id}
+		<div class="col-auto">
+			<div class="d-flex align-items-center justify-content-end">
+				<div class="mr-4">Язык:</div>
+				<select id="language_id" class="form-control" style="min-width:100px;" onchange="if (this.value) window.location.href=this.value">
+					{foreach $languages as $l}
+					<option value='{url module=PostAdmin id=$post->id language_id=$l->id return=null}' {if $language->id == $l->id}selected{/if}>{$l->name|escape}</option>
+					{/foreach}				
+				</select>
 			</div>
 		</div>
 		{/if}
-		{if $message_error}
-		<div class="col-md-12">
-			<div class="alert alert-danger alert-dismissible">
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-				<h4><i class="icon fa fa-ban"></i> {if $message_error == 'url_exists'}Новость с таким адресом уже существует{/if}</h4>
-			</div>
-		</div>
-		{/if}
-		
-		<!-- Основная форма -->
-		<form method=post>
-		<input type=hidden name="session_id" value="{$smarty.session.id}">
-		
-		<div class="col-md-12">
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-file-text"></i>
-				  <h3 class="box-title" style="line-height:1.5">Основные настройки</h3>
-				  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				  <a href="{url module=PostAdmin id=null}" class="btn btn-primary btn-sm pull-right btn-flat mr10"><i class="fa fa-plus"></i> Добавить новую новость</a> 
-				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					<div class="form-group col-md-4">
-						<label for="header">Название новости</label>
-						<input type="text" id="name" class="form-control" name="name" value="{$post->name|escape}" />
-						<input name=id type="hidden" value="{$post->id|escape}"/>
-					</div>
-					<div class="form-group col-md-4">
-						<div class="checkbox" style="margin-top:30px;">
-							<label>
-								<input type="checkbox" name="visible" class="minimal" {if $post->visible}checked{/if}>
-								Активна
-							</label>
-						</div>
-					</div>
-					<div class="clear"></div>
-					<div class="form-group col-md-3">
-						<label for="date">Дата</label>
-						<div id="date" class="input-group date" data-auto-close="true" data-date="{$post->date|date}" data-date-format="dd.mm.yyyy" data-date-autoclose="true">
-							<input id="date" class="form-control" name="date" type="text" value="{$post->date|date}">
-						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-						</div>
-					</div>
-					<div class="form-group col-md-3">
-						<label for="post_image">Изображение новости</label>
-						
-						<div class="input-group">
-							<input type="text" id="post_image" class="form-control" name="image" value="{$post->image|escape}">
-							<span class="input-group-btn">
-								<a href="./templates/js/filemanager/dialog.php?type=1&relative_url=1&field_id=post_image" type="button" class="btn btn-primary btn-flat iframe-btn">Выбрать</a>
-							</span>
-						</div>
-					</div>
-					<div class="clear"></div>
-				</div>
-				<!-- /.box-body -->
-			</div>
-			
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-search-plus"></i>
-				  <h3 class="box-title" style="line-height:1.5">SEO настройки</h3>
-				  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					<div class="form-group col-sm-4">
-						<label for="url">Адрес</label>
-						<div> <span style="width:20%; line-height: 34px; float: left;">/news/</span><input type="text" id="url" style="width:80%;" class="form-control adress-input" name="url" value="{$post->url|escape}" /></div>
-					</div>
-					<div class="form-group col-sm-4">
-						<label for="meta_title">Заголовок</label>
-						<input type="text" id="meta_title" class="form-control" name="meta_title" value="{$post->meta_title|escape}">
-					</div>
-					<div class="form-group col-sm-4">
-						<label for="meta_keywords">Ключевые слова</label>
-						<input type="text" id="meta_keywords" class="form-control" name="meta_keywords" value="{$post->meta_keywords|escape}">
-					</div>
-					<div class="form-group col-sm-8">
-						<label for="meta_description">Описание</label>
-						<textarea data-required="true" data-minlength="5" name="meta_description" id="meta_description" cols="10" rows="3" class="form-control">{$post->meta_description|escape}</textarea>
-					</div>
-					<div class="clear"></div>
-				</div>
-				<!-- /.box-body -->
-			</div>
-			
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-font"></i>
-				  <h3 class="box-title" style="line-height:1.5">Аннотация</h3>
-				  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					<textarea name="annotation" rows="10" class="form-control editor_small">{$post->annotation|escape}</textarea>
-				</div>
-				<!-- /.box-body -->
-			</div>
-			
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-font"></i>
-				  <h3 class="box-title" style="line-height:1.5">Полный текст</h3>
-				  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					<textarea name="body" rows="30" class="form-control editor_large">{$post->text|escape}</textarea>
-				</div>
-				<!-- /.box-body -->
-			</div>
-		</div>
-		</form>
 	</div>
-</section>
+	
+	<form method="post" enctype="multipart/form-data">
+	<input type="hidden" name="session_id" value="{$smarty.session.id}">
+	<input name="id" type="hidden" value="{$post->id|escape}"/>
+		
+	<div class="page-content-wrapper">
+		<div class="page-content p-4 p-sm-6">
+			<div class="widget-group no-gutters">
+				
+				{if $message_success}
+				<script>  
+					$(document).ready(function(){  
+						PNotify.defaults.styling = 'material';
+						PNotify.defaults.icons = 'material';
+						PNotify.success({
+						  title: 'Готово!',
+						  text: "{if $message_success == 'added'}Новость добавлена{elseif $message_success == 'updated'}Новость обновлена{/if}",
+						  stack: {literal}{dir1: 'up', dir2: 'left', 'firstpos1': 25, 'firstpos2': 25}{/literal}
+						});
+					});   
+				</script> 
+				{/if}
+				
+				{if $message_error}
+				<script>  
+					$(document).ready(function(){   
+						PNotify.defaults.styling = 'material';
+						PNotify.defaults.icons = 'material';
+						PNotify.error({
+						  title: 'Ой, что то не так...',
+						  text: "{if $message_error == 'url_exists'}Новость с таким адресом уже существует{/if}",
+						  stack: {literal}{dir1: 'up', dir2: 'left', 'firstpos1': 25, 'firstpos2': 25}{/literal}
+						});
+					});   
+				</script> 
+				{/if}
+				
+				<div class="row">	
+					<div class="col-12 mb-5">
+						<div class="card mb-3">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12">
+										<div class="form-group mb-1">
+											<input type="text" class="form-control form-control-lg" id="name" name="name" aria-describedby="headerHelp" placeholder="Введите название новости" value="{$post->name|escape}">
+											<label for="name">Название новости</label>
+										</div>
+									</div>									
+								</div>
+							</div>
+						</div>
+					</div>
+				
+					<div class="col-12 col-md-4 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Основные параметры</b>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12 d-flex align-items-center mb-3">
+										<div class="form-check">
+											<label class="form-check-label">
+												<input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="visible" {if $post->visible}checked{/if}>
+												<span class="checkbox-icon fuse-ripple-ready text-green"></span>
+												<span class="form-check-description">Активна</span>
+											</label>
+										</div>
+									</div>
+									<div class="form-row col-12 align-items-center">
+										<div class="col-12">
+											<label class="sr-only" for="url">Адрес</label>
+											<div class="input-group mb-3">
+												<div class="input-group-addon">{if $language->main != 1}/{$language->code}{/if}/post/</div>
+												<input type="text" class="form-control" id="url" name="url" value="{$post->url|escape}" placeholder="Адрес">
+											</div>
+											
+											{if $post->url}
+											<a id="post_url" href="{$config->root_url}{if $language->main != 1}/{$language->code}{/if}/post/{$post->url|escape}" target="__blank" class="btn btn-secondary btn-sm mb-3 mb-sm-0"><i class="icon-open-in-new btn-sm p-0"></i> открыть на сайте</a>
+											<button id="copy_url" type="button" class="btn btn-secondary btn-sm"><i class="icon-content-copy btn-sm p-0"></i> копировать url</button>	
+											{/if}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="card mb-3">
+							<div class="card-body">
+								<div class="row">
+									<div class="form-row col-12 col-sm-6">
+										<div class="form-group pt-0 mb-0">
+											<label for="category_id" class="col-form-label pb-0">Категория</label>
+											<select class="form-control" id="category_id" name="category_id">
+												<option value=''>Без категории</option>
+												{foreach $categories as $c}
+												<option value='{$c->id}' {if $post->category_id == $c->id}selected{/if}>{$c->name}</option>
+												{/foreach}
+											</select>
+										</div>
+									</div>
+									<div class="form-row col-12 col-sm-6">
+										<div class="form-group mb-0">
+											<label for="date" class="col-form-label pb-0">Дата публикации</label>
+											<input class="form-control" type="datetime-local" name="date" value="{$post->date|date_format:'%Y-%m-%dT%H:%M:%S'}" id="date" />
+										</div>
+									</div>									
+								</div>
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Сохранить</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-12 col-md-4 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Параметры SEO</b>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12">
+										<div class="form-group">
+											<input type="text" class="form-control" id="meta_title" name="meta_title" aria-describedby="meta_titleHelp" placeholder="Введите заголовок новости" value="{$post->meta_title|escape}">
+											<label for="meta_title">Заголовок новости</label>
+										</div>
+									</div>
+									<div class="col-12">
+										<div class="form-group">
+											<input type="text" class="form-control" id="meta_keywords" name="meta_keywords" value="{$post->meta_keywords|escape}" aria-describedby="meta_keywordsHelp" placeholder="Введите ключевые слова через запятую">
+											<label for="meta_keywords">Ключевые слова</label>
+										</div>
+									</div>
+									<div class="col-12">
+										<div class="form-group">
+											<textarea class="form-control p-2" id="meta_description" name="meta_description" id="meta_description" rows="4">{$post->meta_description|escape}</textarea>
+											<label for="meta_description">Мета-описание новости</label>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Сохранить</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-12 col-md-4 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Превью новости</b>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12 d-flex justify-content-center align-items-center">
+										{if $post->image}<img class="page-preview" src="/files/news/{$post->image|escape}" style="max-height: 320px; max-width:100%; height:100%; width:auto;">{/if}
+										<img class="preview-placeholder" src="./templates/img/placeholder.png" width="100%" height="auto" {if $post->image}style="display:none;"{/if}>
+									</div>
+									
+									<div class="col-8 pt-3 mb-3">
+										 <div class="form-group mb-0 p-0">
+											<input type="hidden" name="image_old" value="{$post->image|escape}">
+											<input type="hidden" id="del_preview" name="del_preview" value="0">
+											<input type="file" name="image">
+										 </div>
+									</div>
+									
+									<div class="col-4 pt-3 mb-3">
+										 <div class="form-group m-0 p-0 text-right" >
+											<i class="icon-trash del-preview text-red" data-toggle="tooltip" data-placement="bottom" title="Удалить превью"></i>
+										 </div>
+									</div>
+									
+									<div class="col-6">
+										<div class="form-group">
+											<input type="text" class="form-control" id="preview_width" name="preview_width" value="{if $page->preview_width}{$page->preview_width}{else}{$settings->post_preview_width}{/if}">
+											<label for="preview_width">Макс. ширина, px</label>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="form-group">
+											<input type="text" class="form-control" id="preview_height" name="preview_height" value="{if $page->preview_height}{$page->preview_height}{else}{$settings->post_preview_height}{/if}">
+											<label for="preview_height">Макс. высота, px</label>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Сохранить</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-12 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Аннотация новости</b>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12">
+										<textarea name="annotation" rows="10" class="form-control editor_large">{$post->annotation|escape}</textarea>
+									</div>
+								</div>
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Сохранить</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-12 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Текст новости</b>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-12">
+										<textarea name="text" rows="20" class="form-control editor_large">{$post->text|escape}</textarea>
+									</div>
+								</div>
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Сохранить</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+</div>

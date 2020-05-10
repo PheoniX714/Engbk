@@ -1,5 +1,11 @@
-<div id="page_title"><p><a href="./">Главная</a></p><h1>Регистрация</h1></div>
-<p style='padding:10px 0;'>Для наших постоянных клиентов мы предлагаем зарегистрироваться в нашем каталоге. Выполнив вход, Вы сможете заказывать товары с учетом скидки, назначенной администрацией для вашего аккаунта. Уточнить Вашу персональную скидку Вы можете по нашим телефонам.</p>
+{* Страница регистрации *}
+
+{* Канонический адрес страницы *}
+{$canonical="/user/register" scope=parent}
+
+{$meta_title = "Регистрация" scope=parent}
+
+<h1>Регистрация</h1>
 
 {if $error}
 <div class="message_error">
@@ -15,12 +21,16 @@
 <form class="form register_form" method="post">
 	<label>Имя</label>
 	<input type="text" name="name" data-format=".+" data-notice="Введите имя" value="{$name|escape}" maxlength="255" />
+	
 	<label>Email</label>
 	<input type="text" name="email" data-format="email" data-notice="Введите email" value="{$email|escape}" maxlength="255" />
+
     <label>Пароль</label>
     <input type="password" name="password" data-format=".+" data-notice="Введите пароль" value="" />
-	<label>Введите число с картинки</label>
-	<div class="captcha"><img src="captcha/image.php?{math equation='rand(10,10000)'}" alt='captcha'/></div>
-	<input class="input_captcha" id="comment_captcha" type="text" name="captcha_code" value="" data-format="\d\d\d\d" data-notice="Введите капчу" maxlength="4"/>
-	<input type="submit" name="register" class="button right" value="Зарегистрироваться">
+
+	<div class="captcha"><img src="captcha/image.php?{math equation='rand(10,10000)'}"/></div> 
+	<input class="input_captcha" id="comment_captcha" type="text" name="captcha_code" value="" data-format="\d\d\d\d" data-notice="Введите капчу"/>
+
+	<input type="submit" class="button" name="register" value="Зарегистрироваться">
+
 </form>

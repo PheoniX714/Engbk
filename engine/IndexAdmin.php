@@ -9,23 +9,32 @@ class IndexAdmin extends Engine
 		// Базовые классы, которые всегда присутствуют в CMS
 		'PagesAdmin'         	 	=> 'pages',
 		'PageAdmin'           		=> 'pages',
+		'SiteMenusAdmin'           	=> 'pages',
+		'SiteMenuAdmin'           	=> 'pages',
+		'NewsCategoriesAdmin'       => 'news',
+		'NewsCategoryAdmin'         => 'news',
 		'NewsAdmin'           		=> 'news',
 		'PostAdmin'           		=> 'news',
 		'FeedbacksAdmin'     		=> 'feedbacks',
 		'CommentAdmin'     			=> 'comments',
 		'CommentsAdmin'     		=> 'comments',
-		'SliderAdmin'      			=> 'settings',
-		'SlideAdmin'       			=> 'settings',
-		'LanguagesAdmin'      		=> 'settings',
-		'LanguageAdmin'       		=> 'settings',
+		'SliderAdmin'      			=> 'slider',
+		'SlideAdmin'       			=> 'slider',
+		'LangConstantsAdmin'      	=> 'languages',
+		'LanguagesAdmin'      		=> 'languages',
+		'LanguageAdmin'       		=> 'languages',
 		'SettingsAdmin'       		=> 'settings',
-		'ManagersAdmin'       		=> 'managers',
+		'ManagersAdmin'       		=> 'managers', 
 		'ManagerAdmin'        		=> 'managers',
 		// Классы дополнений установленых в CMS
-		'PaymentMethodAdmin'       	=> 'settings',
+		'PaymentMethodsAdmin'       => 'payments',
+		'PaymentMethodAdmin'       	=> 'payments',
 		'ProductsImportAdmin'       => 'products',
+		'ProductsExportAdmin'       => 'products',
 		'ProductsGroupsAdmin'       => 'products',
 		'ProductsGroupAdmin'        => 'products',
+		'BrandsAdmin'       		=> 'products',
+		'BrandAdmin'       			=> 'products',
 		'ProductsAdmin'       		=> 'products',
 		'ProductAdmin'        		=> 'products',
 		'CategoriesAdmin'     		=> 'categories',
@@ -52,16 +61,26 @@ class IndexAdmin extends Engine
 		
 		$this->templates->assign('settings',	$this->settings);
 		$this->templates->assign('config',	$this->config);
-
-		// Администратор
-		$this->manager = $this->managers->get_manager(intval($_SESSION['admin_id']));
-		$this->templates->assign('manager', $this->manager);
 		
  		// Берем название модуля из get-запроса
 		$module = $this->request->get('module', 'string');
 		$module = preg_replace("/[^A-Za-z0-9]+/", "", $module);
 		
 		if($_SESSION['admin_id']){
+			$this->manager = $this->managers->get_manager(intval($_SESSION['admin_id']));
+		}elseif($_COOKIE['memory']){
+			$this->manager = $this->managers->check_token($_COOKIE['memory']);
+			if($this->manager->last_ip == $_SERVER['REMOTE_ADDR']){
+				$_SESSION['admin_id'] = $this->manager->id;
+				$_SESSION['admin'] = 'admin';
+				header('Location: index.php');
+			}else
+				unset($this->manager);
+		}
+		
+		if($this->manager){
+			$this->templates->assign('manager', $this->manager);
+			
 			// Если не запросили модуль - используем модуль первый из разрешенных
 			if(empty($module) || !is_file('engine/'.$module.'.php'))
 			{
@@ -76,6 +95,8 @@ class IndexAdmin extends Engine
 			}
 			if(empty($module))
 				$module = 'ProductsAdmin';
+		}elseif($module == 'PasswordRestoreAdmin'){
+			$module = 'PasswordRestoreAdmin';
 		}else{
 			$module = 'LoginAdmin';
 		}
@@ -102,6 +123,9 @@ class IndexAdmin extends Engine
 		// Проверка прав доступа к модулю
 		if(isset($this->modules_permissions[get_class($this->module)]) && $this->managers->access($this->modules_permissions[get_class($this->module)]))
 		{
+			$content = $this->module->fetch();
+			$this->templates->assign("content", $content);
+		}elseif(get_class($this->module) == 'PasswordRestoreAdmin'){
 			$content = $this->module->fetch();
 			$this->templates->assign("content", $content);
 		}elseif(get_class($this->module) == 'LoginAdmin'){

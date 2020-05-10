@@ -1,0 +1,7 @@
+ul {list-style:none;}
+.wrap {width: 960px; margin: 0 auto;}
+.demo-container {padding: 20px; float: left; width: 260px;}
+.demo-container h4 {font-size: 14px; margin: 0 0 5px 0;}
+.clear {clear: both;}
+.text {margin-bottom: 1em; line-height: 1.5em;}
+.dcjq-count {float: right;}

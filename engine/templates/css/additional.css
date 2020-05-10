@@ -1,0 +1,341 @@
+.tn-link, .tn-link:hover, .tn-link:focus, .tn-link:active{
+	text-decoration:none;
+}
+.h-line:hover, .h-line:active{
+	text-decoration:underline !important;
+}
+.table-styled .checkbox-cell{
+	width:56px;
+	text-align:center;
+	outline:0 !important;
+}
+.table-styled .checkbox-cell .form-check-label input[type=checkbox]:checked ~ .checkbox-icon, .form-check-label input[type=checkbox]:checked ~ .custom-control-indicator, .custom-checkbox input[type=checkbox]:checked ~ .checkbox-icon, .custom-checkbox input[type=checkbox]:checked ~ .custom-control-indicator, .custom-radio input[type=checkbox]:checked ~ .checkbox-icon, .custom-radio input[type=checkbox]:checked ~ .custom-control-indicator {
+  color:#2196F3;
+}
+.table-styled a{
+	text-decoration:none;
+}
+.table-styled .icon:hover, .table-styled .icon:active {
+	color:#2196F3;
+}
+.blue-tabs .nav-link.active{
+	background-color: #eee !important;
+}
+.td-wh-none{
+	text-decoration:none !important;
+}
+.td-wh-none:hover{
+	text-decoration:underline !important;
+}
+
+.todo-items .handle{
+	cursor:pointer;
+}
+.custom-file-input {
+    z-index: 0 !important;
+}
+.custom-file-label {
+	cursor:pointer !important;
+	overflow:hidden;
+}
+.custom-file-label::after {
+    content: "Выбрать" !important;
+}
+.fuse-ripple-input-wrapper .fuse-ripple-input {
+	min-width:188px;
+	cursor:pointer;
+}
+.card {
+	border: 1px solid rgba(0,0,0,0.225);
+}
+.card-header {
+   background-color: rgba(0,0,0,0.09);
+    border-bottom: 1px solid rgba(0,0,0,0.225);
+}
+.images-list .image-box{
+	padding:15px;
+}
+.images-list .image-box .image{
+	border:1px solid #757575;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	background:#eee;
+	position:relative;
+	cursor:pointer;
+	overflow:hidden;
+}
+.images-list .image-box .image img{
+	height:auto;
+}
+.images-list .image-box .image .image-controls{
+	position:absolute;
+	bottom:0;
+	right:0;
+	left:0;
+	height:30px;
+	display:none;
+}
+.images-list .image-box .image:hover .image-controls{
+	display:flex;
+}
+
+.form-control-lg, .input-group-lg>.form-control, .input-group-lg>.input-group-prepend>.input-group-text, .input-group-lg>.input-group-append>.input-group-text, .input-group-lg>.input-group-prepend>.btn, .input-group-lg>.input-group-append>.btn {
+    padding: 0 1.6rem;
+    font-size: 2.8rem;
+    line-height: 2.8rem;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+}
+
+#products_list .image{
+	border:1px solid #757575;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	background:#eee;
+	position:relative;
+	cursor:pointer;
+	overflow:hidden;
+}
+#products_list .info{
+	min-height:100px;
+}
+
+.del-preview{
+	cursor:pointer;
+}
+
+.todo-items .todo-item:nth-child(even), .todo-items .sort-item:nth-child(even), #variants-list .sort-item:nth-child(even), .categories-list .category:nth-child(even){
+	background:#f5f5f5;
+}
+.bg-yellow-100 > div, .bg-yellow-100 .sort-item:nth-child(even){
+    background: #FFF9C4 !important;
+}
+.bg-blue-100 > div, .bg-blue-100 .sort-item:nth-child(even){
+    background-color: #BBDEFB !important;
+}
+.w-5 {
+	width: 5% !important
+}
+.w-10 {
+	width: 10% !important
+}
+.w-15 {
+	width: 15% !important
+}
+.w-20 {
+	width: 20% !important
+}
+.w-30 {
+	width: 30% !important
+}
+.w-35 {
+	width: 35% !important
+}
+.w-40 {
+	width: 40% !important
+}
+.w-45 {
+	width: 45% !important
+}
+.w-55 {
+	width: 55% !important
+}
+.w-60 {
+	width: 60% !important
+}
+.w-65 {
+	width: 65% !important
+}
+.w-70 {
+	width: 70% !important
+}
+.w-80 {
+	width: 80% !important
+}
+.w-85 {
+	width: 85% !important
+}
+.w-90 {
+	width: 90% !important
+}
+.w-95 {
+	width: 95% !important
+}
+@media (min-width: 576px) {
+	.w-sm-5 {
+		width: 5% !important
+	}
+	.w-sm-10 {
+		width: 10% !important
+	}
+	.w-sm-15 {
+		width: 15% !important
+	}
+	.w-sm-20 {
+		width: 20% !important
+	}
+	.w-sm-30 {
+		width: 30% !important
+	}
+	.w-sm-35 {
+		width: 35% !important
+	}
+	.w-sm-40 {
+		width: 40% !important
+	}
+	.w-sm-45 {
+		width: 45% !important
+	}
+	.w-sm-55 {
+		width: 55% !important
+	}
+	.w-sm-60 {
+		width: 60% !important
+	}
+	.w-sm-65 {
+		width: 65% !important
+	}
+	.w-sm-70 {
+		width: 70% !important
+	}
+	.w-sm-80 {
+		width: 80% !important
+	}
+	.w-sm-85 {
+		width: 85% !important
+	}
+	.w-sm-90 {
+		width: 90% !important
+	}
+	.w-sm-95 {
+		width: 95% !important
+	}
+}
+@media (min-width: 768px) {
+	.w-md-5 {
+		width: 5% !important
+	}
+	.w-md-10 {
+		width: 10% !important
+	}
+	.w-md-15 {
+		width: 15% !important
+	}
+	.w-md-20 {
+		width: 20% !important
+	}
+	.w-md-30 {
+		width: 30% !important
+	}
+	.w-md-35 {
+		width: 35% !important
+	}
+	.w-md-40 {
+		width: 40% !important
+	}
+	.w-md-45 {
+		width: 45% !important
+	}
+	.w-md-55 {
+		width: 55% !important
+	}
+	.w-md-60 {
+		width: 60% !important
+	}
+	.w-md-65 {
+		width: 65% !important
+	}
+	.w-md-70 {
+		width: 70% !important
+	}
+	.w-md-80 {
+		width: 80% !important
+	}
+	.w-md-85 {
+		width: 85% !important
+	}
+	.w-md-90 {
+		width: 90% !important
+	}
+	.w-md-95 {
+		width: 95% !important
+	}
+}
+@media (min-width: 992px) {
+	.w-lg-5 {
+		width: 5% !important
+	}
+	.w-lg-10 {
+		width: 10% !important
+	}
+	.w-lg-15 {
+		width: 15% !important
+	}
+	.w-lg-20 {
+		width: 20% !important
+	}
+	.w-lg-30 {
+		width: 30% !important
+	}
+	.w-lg-35 {
+		width: 35% !important
+	}
+	.w-lg-40 {
+		width: 40% !important
+	}
+	.w-lg-45 {
+		width: 45% !important
+	}
+	.w-lg-55 {
+		width: 55% !important
+	}
+	.w-lg-60 {
+		width: 60% !important
+	}
+	.w-lg-65 {
+		width: 65% !important
+	}
+	.w-lg-70 {
+		width: 70% !important
+	}
+	.w-lg-80 {
+		width: 80% !important
+	}
+	.w-lg-85 {
+		width: 85% !important
+	}
+	.w-lg-90 {
+		width: 90% !important
+	}
+	.w-lg-95 {
+		width: 95% !important
+	}
+}
+@media (max-width: 1023px) {
+	.m-none{
+		display:none !important;
+	}
+	.images-list .image-box .image .image-controls{
+		display:flex;
+	}
+	.btn{
+		min-width: 2rem;
+	}
+	#feature_categories{
+		height:auto;
+		padding:10px;
+		width:100%;
+	}
+}
+@media (min-width: 1024px) {
+	#feature_categories{
+		height:400px;
+	}
+}
+@media only screen and (max-device-width : 1024px) {
+    .tooltip {
+        display: none !important;
+    }
+ }

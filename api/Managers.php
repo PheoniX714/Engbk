@@ -1,16 +1,17 @@
 <?php
-
+session_start();
 require_once('Engine.php');
 
 class Managers extends Engine
 {	
-	private $manager_salt = '8e86a279d6e182b3c811c559e6b15484';	
+	private $manager_salt = '8e86a279d6e182b3c811c559e6b15484';
+	private $cookie_salt  = 'rn524u55sibb84fjp30ew6ji5grdd10q';
 	
 	public $permissions_list = array(
 		array('code'=>'products', 'title'=>'Товары'),
 		array('code'=>'categories', 'title'=>'Категории товаров'),
 		array('code'=>'gallery', 'title'=>'Галерея'),
-		#array('code'=>'brands', 'title'=>'Бренды'),
+		array('code'=>'brands', 'title'=>'Бренды'),
 		array('code'=>'features', 'title'=>'Свойства'),
 		array('code'=>'orders', 'title'=>'Заказы'),
 		array('code'=>'labels', 'title'=>'Метки заказов'),
@@ -23,18 +24,17 @@ class Managers extends Engine
 		array('code'=>'comments', 'title'=>'Комментарии'),
 		array('code'=>'feedbacks', 'title'=>'Обратная связь'),
 		array('code'=>'import', 'title'=>'Импорт товаров'),
-		#array('code'=>'export', 'title'=>'Экспорт'),
-		#array('code'=>'backup', 'title'=>'Бекап'),
-		#array('code'=>'stats', 'title'=>'Статистика'),
-		#array('code'=>'templates', 'title'=>'Дизайн'),
+		array('code'=>'export', 'title'=>'Экспорт'),
+		array('code'=>'backup', 'title'=>'Бекап'),
+		array('code'=>'stats', 'title'=>'Статистика'),
+		array('code'=>'templates', 'title'=>'Дизайн'),
 		array('code'=>'settings', 'title'=>'Настройки'),
+		array('code'=>'languages', 'title'=>'Мультиязычность'),
 		array('code'=>'currency', 'title'=>'Валюты'),
-		#array('code'=>'delivery', 'title'=>'Способы доставки'),
-		#array('code'=>'payment', 'title'=>'Способы оплаты'),
+		array('code'=>'delivery', 'title'=>'Способы доставки'),
+		array('code'=>'payments', 'title'=>'Способы оплаты'),
 		array('code'=>'managers', 'title'=>'Менеджеры')
 	);
-		
-	public $passwd_file = "engine/.passwd";
 
 	public function __construct()
 	{
@@ -51,7 +51,7 @@ class Managers extends Engine
 
 	public function get_managers()
 	{
-		$query = $this->db->placehold("SELECT m.id, m.login, m.password, m.permissions, m.last_ip, m.last_login FROM __managers m ORDER BY m.id");
+		$query = $this->db->placehold("SELECT m.id, m.login, m.password, m.email, m.permissions, m.last_ip, m.last_login, m.bad_attempts, m.last_attempt FROM __managers m ORDER BY m.id");
 		$this->db->query($query);
 		$managers = $this->db->results();
 		
@@ -77,17 +77,17 @@ class Managers extends Engine
 			$where = $this->db->placehold(' WHERE m.id=? ', intval($id));
 		
 		// Выбираем менеджера
-		$query = $this->db->placehold("SELECT m.id, m.login, m.permissions, m.last_ip, m.last_login FROM __managers m $where LIMIT 1", $id);
+		$query = $this->db->placehold("SELECT m.id, m.login, m.email, m.permissions, m.last_ip, m.last_login, m.bad_attempts, m.last_attempt FROM __managers m $where LIMIT 1");
 		$this->db->query($query);
 		$manager = $this->db->result();
+				
+		if(empty($manager))
+			return false;
 		
 		if($manager->id == 1)
 			$manager->permissions = array_column($this->permissions_list, 'code');
 		else
 			$manager->permissions = explode(",",$manager->permissions);
-		
-		if(empty($manager))
-			return false;
 		
 		return $manager;
 	}
@@ -157,10 +157,49 @@ class Managers extends Engine
 		$query = $this->db->placehold("SELECT id FROM __managers WHERE login=? AND password=? LIMIT 1", $login, $encpassword);
 		$this->db->query($query);
 		if($id = $this->db->result('id')){
-			$query = $this->db->placehold("UPDATE __managers SET last_login=now() WHERE id=? LIMIT 1", $id);
+			$ip = $_SERVER['REMOTE_ADDR'];
+			$query = $this->db->placehold("UPDATE __managers SET last_login=now(), bad_attempts=0, last_attempt=now(), last_ip=? WHERE id=? LIMIT 1", $ip, $id);
 			$this->db->query($query);
-			return $id;			
+			return $id;
 		}
 		return false;
+	}
+	
+	public function generate_token($manager_id){
+		$where = $this->db->placehold(' WHERE m.id=? ', intval($manager_id));
+
+		$query = $this->db->placehold("SELECT m.id, m.last_login FROM __managers m $where LIMIT 1");
+		$this->db->query($query);
+		$manager = $this->db->result();
+		
+		if($manager){
+			$manager = (array)$manager;
+			$token = md5($this->cookie_salt.$manager['id'].md5($this->cookie_salt.$manager['last_login']));
+			
+			$query = $this->db->placehold("UPDATE __managers SET token=? WHERE id=? LIMIT 1", $token, $manager_id);
+			$this->db->query($query);
+			
+			return $token;
+		}
+		return false;
+	}
+	public function check_token($token){
+		$where = $this->db->placehold(' WHERE m.token=? ', $token);
+
+		$query = $this->db->placehold("SELECT m.id, m.login, m.email, m.permissions, m.last_ip, m.last_login, m.bad_attempts, m.last_attempt FROM __managers m $where LIMIT 1");
+		$this->db->query($query);
+		$manager = $this->db->result();
+		
+		if($manager){
+			return $manager;
+		}
+		return false;
+	}
+	public function logout($id){
+
+		$query = $this->db->placehold("UPDATE __managers SET token=NULL WHERE id=? LIMIT 1", intval($id));
+		$this->db->query($query);
+		
+		return true;
 	}
 }

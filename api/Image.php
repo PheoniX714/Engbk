@@ -4,13 +4,24 @@ require_once('Engine.php');
 
 class Image extends Engine
 {
-	private	$allowed_extentions = array('png', 'gif', 'jpg', 'jpeg');
+	private	$allowed_extentions = array('png', 'gif', 'jpg', 'jpeg', 'webp');
 
 	public function __construct()
 	{		
 		parent::__construct();
 	}
 	
+	function resize_image($original_file, $width , $height, $dir)
+	{
+		$sharpen = 1;
+		
+		if(class_exists('Imagick') && $this->config->use_imagick)
+			$this->image_constrain_imagick($dir.$original_file, $dir.$original_file, $width, $height, $watermark, $watermark_offet_x, $watermark_offet_y, $watermark_transparency, $sharpen);
+		else
+			$this->image_constrain_gd($dir.$original_file, $dir.$original_file, $width, $height, $watermark, $watermark_offet_x, $watermark_offet_y, $watermark_transparency);
+		
+		return true;
+	}
 	
 	/**
 	 * Создание превью изображения

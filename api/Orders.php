@@ -339,7 +339,9 @@ class Orders extends Engine
 			$variant = $this->variants->get_variant($purchase->variant_id);
 			if(empty($variant))
 				return false;
-			$product = $this->products->get_product(intval($variant->product_id));
+			$translation = $this->products->get_product_translation(intval($variant->product_id));
+			$product = $this->products->get_product(intval($translation->product_id));
+			$product = (object)array_merge((array)$product, (array)$translation);
 			if(empty($product))
 				return false;
 		}			

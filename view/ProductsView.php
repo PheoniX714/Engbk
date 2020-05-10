@@ -11,7 +11,7 @@ class ProductsView extends View
 	 */	
 	function fetch()
 	{
-		$max_price = $this->variants->get_max_price();
+		/* $max_price = $this->variants->get_max_price();
 		$min_price = $this->variants->get_min_price();
 		
 		if(empty($max_price))
@@ -24,7 +24,7 @@ class ProductsView extends View
 		
 		$filter_min_price = $min_price->price;
 		$filter_max_price = $max_price->price;
-		
+		 */
 		// GET-Параметры
 		$category_url = $this->request->get('category', 'string');
 		$brand_url    = $this->request->get('brand', 'string');
@@ -42,6 +42,7 @@ class ProductsView extends View
 		
 		$filter = array();
 		$filter['visible'] = 1;
+		$filter['language_id'] = $_SESSION['lang']->id;
 		
 		$filter['min_price'] = $filter_min_price;	
 		$filter['max_price'] = $filter_max_price;
@@ -84,22 +85,14 @@ class ProductsView extends View
 		else
 			$filter['sort'] = 'position';			
 		$this->templates->assign('sort', $filter['sort']);
-		
-		// Сортировка товаров, сохраняем в сесси, чтобы текущая сортировка оставалась для всего сайта
-		if($display = $this->request->get('display', 'string'))
-			$_SESSION['display'] = $display;		
-		if (!empty($_SESSION['display']))
-			$this->templates->assign('display', $_SESSION['display']);
-		else
-			$this->templates->assign('display', 'grid');
-		
+				
 		
 		// Свойства товаров
 		if(!empty($category))
 		{
 			$features = array();
 			$filter['features'] = array();
-			foreach($this->features->get_features(array('category_id'=>$category->id, 'in_filter'=>1)) as $feature)
+			foreach($this->features->get_features(array('category_id'=>$category->id, 'in_filter'=>1, 'language_id'=>$_SESSION['lang']->id)) as $feature)
 			{ 
 				$features[$feature->id] = $feature;
 				if(($val = $this->request->get($feature->id))!='')
@@ -133,19 +126,7 @@ class ProductsView extends View
 
 			$this->templates->assign('features', $features);
  		}
-		
-		$products_colors = $this->products->get_products_colors($filter);
-		$this->templates->assign('products_colors', $products_colors);
-		
-		$this->templates->assign('filter_features', $filter['features']);
-		if($filter_colors = $this->request->get('colors')){
-			foreach($filter_colors as $fc){
-				if(in_array($fc,$products_colors))
-					$filter['colors'][] = $fc;
-			}
-		}
-		$this->templates->assign('filter_colors', $filter['colors']);	
-		
+			
 		// Постраничная навигация
 		$items_per_page = $this->settings->products_num;		
 		// Текущая страница в постраничном выводе
@@ -155,7 +136,7 @@ class ProductsView extends View
 		$this->templates->assign('current_page_num', $current_page);
 		// Вычисляем количество страниц
 		$products_count = $this->products->count_products($filter);
-		
+				
 		// Показать все страницы сразу
 		if($this->request->get('page') == 'all')
 			$items_per_page = $products_count;	
@@ -181,7 +162,7 @@ class ProductsView extends View
 		$products = array();
 		foreach($this->products->get_products($filter) as $p)
 			$products[$p->id] = $p;
-			
+					
 		// Если искали товар и найден ровно один - перенаправляем на него
 		if(!empty($keyword) && $products_count == 1)
 			header('Location: '.$this->config->root_url.'/products/'.$p->url);
@@ -190,30 +171,8 @@ class ProductsView extends View
 		{
 			$products_ids = array_keys($products);
 			
-			$language_id = $_SESSION['lang']->id;
-						
-			if($language_id > 1){
-				$translation_filter = array();
-				$translation_filter['id'] = $products_ids;
-				$translation_filter['language_id'] = $language_id;
-				
-				$products_translation = array();
-				foreach($this->products->get_products_translation($translation_filter) as $t)
-					$products_translation[$t->product_id] = $t;
-			}
-			
 			foreach($products as &$product)
-			{
-				if($products_translation){
-					$product->name = $products_translation[$product->id]->name;
-					$product->visible_name = $products_translation[$product->id]->visible_name;
-					$product->meta_title = $products_translation[$product->id]->meta_title;
-					$product->meta_keywords = $products_translation[$product->id]->meta_keywords;
-					$product->meta_description = $products_translation[$product->id]->meta_description;
-					$product->annotation = $products_translation[$product->id]->annotation;
-					$product->body = $products_translation[$product->id]->body;
-				}
-				
+			{				
 				$product->variants = array();
 				$product->images = array();
 				$product->properties = array();
@@ -227,31 +186,6 @@ class ProductsView extends View
 				$products[$variant->product_id]->variants[] = $variant;
 			}
 			
-			$groups_products = array();
-			$products_groups = $this->products->get_products_groups($products_ids);
-			foreach($products_groups as $pg){
-				$group_products_ids = array();
-				$group_products = array();
-				foreach($this->products->get_group_products($pg->group_id) as $p)
-				{
-					$group_products_ids[] = $p->product_id;
-					$group_products[$p->product_id] = null;
-				}
-				
-				if(!empty($group_products_ids))
-				{
-					foreach($this->products->get_products(array('id'=>$group_products_ids, 'category_id'=>'', 'visible'=>1)) as $p){
-						$img = array();
-						$img = $this->products->get_images(array('product_id'=>$p->id));
-						
-						$p->image = $img[0];
-						$groups_products[$pg->product_id][$p->id] = $p;
-					}
-				}
-				
-			}
-			
-	
 			$images = $this->products->get_images(array('product_id'=>$products_ids));
 			foreach($images as $image)
 				$products[$image->product_id]->images[] = $image;
@@ -262,10 +196,10 @@ class ProductsView extends View
 					$product->variant = $product->variants[0];
 				if(isset($product->images[0]))
 					$product->image = $product->images[0];
-				if(count($groups_products[$product->id]) > 1)
+				if(@count($groups_products[$product->id]) > 1)
 					$product->group_products = $groups_products[$product->id];
 			}
-				
+			
 			/*
 			$properties = $this->features->get_options(array('product_id'=>$products_ids));
 			foreach($properties as $property)
@@ -283,11 +217,15 @@ class ProductsView extends View
 		}
 		
 		// Устанавливаем мета-теги в зависимости от запроса
-		if($this->page)
+		if(isset($this->page->id))
 		{
 			$this->templates->assign('meta_title', $this->page->meta_title);
 			$this->templates->assign('meta_keywords', $this->page->meta_keywords);
 			$this->templates->assign('meta_description', $this->page->meta_description);
+			
+			$pages_group = $this->pages->get_page_group($this->page->id);
+			$this->templates->assign('page_group', $page_group);
+			
 		}
 		elseif(isset($category))
 		{

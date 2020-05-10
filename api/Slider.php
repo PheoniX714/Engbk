@@ -109,7 +109,7 @@ class Slider extends Engine
 	
 	public function delete_image($filename)
 	{
-		@unlink($this->config->root_dir.'files/slides/'.$filename);		
+		@unlink($this->config->root_dir.'files/slider/'.$filename);		
 	}	
 		
 }

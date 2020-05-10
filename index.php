@@ -1,4 +1,4 @@
-<?PHP
+<?php
 
 // Засекаем время
 $time_start = microtime(true);
@@ -8,7 +8,6 @@ session_start();
 require_once('view/IndexView.php');
 
 $view = new IndexView();
-
 
 if(isset($_GET['logout']))
 {
@@ -30,9 +29,8 @@ if(($res = $view->fetch()) !== false)
 		if(!empty($_SESSION['current_page']) && !empty($_SESSION['last_visited_page']) && $_SESSION['last_visited_page'] !== $_SESSION['current_page'])
 			$_SESSION['last_visited_page'] = $_SESSION['current_page'];
 		$_SESSION['current_page'] = $_SERVER['REQUEST_URI'];
-	}	
+	}
 
-	print_r($lang);
 }
 else 
 { 
@@ -46,14 +44,23 @@ else
 }
 
 // Отладочная информация
-if(1)
+if(0)
 {
 	print "<!--\r\n";
 	$time_end = microtime(true);
 	$exec_time = $time_end-$time_start;
+	
+	$file = 'stat_7.txt';
+	// Открываем файл для получения существующего содержимого
+	$current = file_get_contents($file);
+	// Добавляем нового человека в файл
+	$current .= $exec_time."\n";
+	// Пишем содержимое обратно в файл
+	file_put_contents($file, $current);
   
   	if(function_exists('memory_get_peak_usage'))
 		print "memory peak usage: ".memory_get_peak_usage()." bytes\r\n";  
 	print "page generation time: ".$exec_time." seconds\r\n";  
 	print "-->";
+	
 }

@@ -130,8 +130,9 @@ class Notify extends Engine
 			// Отправляем письмо
 			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/emails/email_order_admin.tpl');
 			$subject = $this->templates->get_var('subject');
-			$this->email($this->settings->order_email, $subject, $email_template, $this->settings->notify_from_email);
-	
+			$emails_list = explode(',', $this->settings->order_email);
+			foreach($emails_list as $email)
+				$this->email(trim($email), $subject, $email_template, $this->settings->notify_from_email);
 	}
 
 	
@@ -151,7 +152,10 @@ class Notify extends Engine
 			// Отправляем письмо
 			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/emails/email_comment_admin.tpl');
 			$subject = $this->templates->get_var('subject');
-			$this->email($this->settings->comment_email, $subject, $email_template, $this->settings->notify_from_email);
+			
+			$emails_list = explode(',', $this->settings->comment_email);
+			foreach($emails_list as $email)
+				$this->email(trim($email), $subject, $email_template, $this->settings->notify_from_email);
 	}
 
 	public function email_password_remind($user_id, $code)
@@ -171,9 +175,9 @@ class Notify extends Engine
 			$this->templates->smarty->clearAssign('code');
 	}
 
-	public function email_feedback_admin($feedback_id)
+	public function email_feedback_admin($feedback)
 	{ 
-			if(!($feedback = $this->feedbacks->get_feedback(intval($feedback_id))))
+			if(!($feedback))
 				return false;
 
 			$this->templates->assign('feedback', $feedback);
@@ -181,29 +185,9 @@ class Notify extends Engine
 			// Отправляем письмо
 			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/emails/email_feedback_admin.tpl');
 			$subject = $this->templates->get_var('subject');
-			$this->email($this->settings->comment_email, $subject, $email_template, "$feedback->name <$feedback->email>", "$feedback->name <$feedback->email>");
+			
+			$emails_list = explode(',', $this->settings->comment_email);
+			foreach($emails_list as $email)
+				$this->email(trim($email), $subject, $email_template, "$feedback->name <$feedback->email>", "$feedback->name <$feedback->email>");
 	}
-	public function email_callback_admin($callback)
-	{ 
-			$this->templates->assign('callback', $callback);
-
-			// Отправляем письмо
-			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/email_callback_admin.tpl');
-			$subject = $this->templates->get_var('subject');
-			$this->email($this->settings->comment_email, $subject, $email_template, "$callback->name ", "$feedback->name ");
-	}
-	public function email_mquery_admin($mquery)
-	{ 
-			if(empty($mquery))
-				return false;
-
-			$this->templates->assign('mquery', $mquery);
-
-			// Отправляем письмо
-			$email_template = $this->templates->fetch($this->config->root_dir.'engine/templates/html/email_mquery_admin.tpl');
-			$subject = $this->templates->get_var('subject');
-			$this->email($this->settings->comment_email, $subject, $email_template, "", "$mquery->name");
-			return true;
-	}
-
 }

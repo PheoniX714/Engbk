@@ -1,17 +1,9 @@
 <?php
 
 session_start();
-
 require_once('../../api/Engine.php');
 
 $engine = new Engine();
-
-// Проверка сессии для защиты от xss
-if(!$engine->request->check_session())
-{
-	trigger_error('Session expired', E_USER_WARNING);
-	exit();
-}
 
 $id = intval($engine->request->post('id'));
 $object = $engine->request->post('object');
@@ -27,19 +19,18 @@ switch ($object)
     	if($engine->managers->access('news'))
         $result = $engine->news->update_post($id, $values);
         break;
+	case 'news_categories':
+    	if($engine->managers->access('news'))
+        $result = $engine->news->update_category($id, $values);
+        break;
 	case 'slider':
     	if($engine->managers->access('settings'))
         $result = $engine->slider->update_slide($id, $values);
         break;
-	case 'languages':
-    	if($engine->managers->access('pages'))
-        $result = $engine->languages->update_language($id, $values);
-        break;
 	case 'comment':
     	if($engine->managers->access('comments'))
         $result = $engine->comments->update_comment($id, $values);
-        break;
-		
+        break;		
 	case 'product':
     	if($engine->managers->access('products'))
         $result = $engine->products->update_product($id, $values);
@@ -55,6 +46,14 @@ switch ($object)
 	case 'categories':
     	if($engine->managers->access('categories'))
         $result = $engine->categories->update_category($id, $values);
+        break;
+	case 'languages_switch_main':
+    	if($engine->managers->access('languages'))
+        $result = $engine->languages->set_main_language($id, $values);
+        break;
+	case 'languages_delete':
+    	if($engine->managers->access('languages'))
+        $result = $engine->languages->delete_language($id);
         break;
 	case 'gallery_categories':
     	if($engine->managers->access('gallery'))
@@ -77,6 +76,6 @@ switch ($object)
 header("Content-type: application/json; charset=UTF-8");
 header("Cache-Control: must-revalidate");
 header("Pragma: no-cache");
-header("Expires: -1");		
+header("Expires: -1");
 $json = json_encode($result);
 print $json;

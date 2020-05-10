@@ -1,104 +1,179 @@
 {* Title *}
-{$meta_title = 'Слайдер' scope=parent}
+{$meta_title='Слайдер' scope='root'}
+{$sm_groupe = 'slider' scope='root'}
 
-{$sm_groupe = 'slider' scope=parent}
-{$page_additional_css = '
-	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-' scope=parent}
+{capture name=js}
+{literal}
+<script>
+	var slides_list = document.getElementById('slides_list');
+	var sortable = new Sortable(slides_list, {
+		multiDrag: true,
+		selectedClass: 'bg-yellow-100',
+		handle: '.handle',
+		animation: 150,
+		ghostClass: 'bg-blue-100',
+		onEnd: function() {
+			$.ajax({url: document.location.href, type: "POST", dataType: "html", data: $('form').serialize()});
+		}
+	});
+	
+	$(function () {
 
-{$page_additional_js = '
-	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/modules/slider.js"></script>
-' scope=parent}
+		$("#check_all").change(function() {
+			if($('#check_all').hasClass('checked')){
+				$('#list .custom-control-input:not(:disabled)').attr('checked', false);
+				$('#check_all').removeClass('checked');
+			}else{
+				$('#list .custom-control-input:not(:disabled)').attr('checked', true);
+				$('#check_all').addClass('checked');
+			}
+		});		
+		  
+		$("button.visible").on('click', function(){
+			var icon        = $(this);
+			var line        = icon.closest("#list .todo-item");
+			var but         = icon.children(".icon-lightbulb");
+			var id          = line.find('input[type="checkbox"][name*="check"]').val();
+			var session_id  = icon.closest('form').find('input[type="hidden"][name*="session_id"]').val();
+			var state       = but.hasClass('enbl')?0:1;
+			$.ajax({
+				type: 'POST',
+				url: 'ajax/update_object.php',
+				dataType: 'json',
+				data: {'object': 'slider', 'id': id, 'values': {'visible': state}, 'session_id': session_id},
+				error: function (data) {
+					console.log(data);
+				},
+				success: function(data){
+					if(!state){
+						but.removeClass('text-yellow-900 enbl');
+					}else{
+						but.addClass('text-yellow-900 enbl');
+					}			
+				},
+				dataType: 'json'
+			});	
+			return false;
+		});
+		
+		$("button.delete").on("click", function(){
+			$('#list .todo-item input[type="checkbox"][name*="check"]').prop('checked', false);
+			$(this).closest("#list .todo-item").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+			$(this).closest("form").find('select[name="action"] option[value=delete]').prop('selected', true);
+			$(this).closest("form").submit();
+			return false;
+		});
+		
+		$("form").submit(function() {
+			if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
+				return false;	
+		});
+		
+	  });
+</script>
+{/literal}
+{/capture}
 
-<section class="content-header">
-	<h1>Слайдер</h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li class="active">Слайдер</li>
-	</ol>
-</section>
+<div id="contacts" class="page-layout simple left-sidebar-floating tabbed">
 
-<section class="content">
-<form id="list_form" method="post">
-<!-- Main row -->
-  <div class="row">
-	<!-- Left col -->
-	<div class="col-md-12">
-	  <div class="box box-success"> 
-		<div class="box-header">
-		  <i class="fa fa-th-list"></i>
-		  <h3 class="box-title" style="line-height:1.5">Управление слайдами</h3>
-		  <a href="index.php?module=SlideAdmin" class="btn btn-sm btn-primary btn-flat pull-right"><i class="fa fa-plus"></i> <b> Добавить слайд</b></a>
-		</div>
-		<!-- /.box-header -->
-		<div class="box-body no-padding">
-			<input type="hidden" name="session_id" value="{$smarty.session.id}">   
-			<table class="table table-striped table-bordered table-hover tabled-view black-th sortable-table" id="functional-table">
-                <tbody>
-				<tr>
-					<th class="move-cell"></th>
-					<th class="checkbox-cell ln-inherit">
-						<input type="checkbox" class="minimal checkbox-toggle">
-					</th>
-					<th>Изображение</th>
-					<th class="actions-cell">Действия</th>
-				</tr>
-				{if $slides}
-                {foreach $slides as $slide}
-				<tr class="c_item">
-					<td style="line-height:120px; text-align:center; width:40px;">
-						<input type="hidden" name="positions[{$slide->id}]" value="{$slide->position}">
-						<div class="move_zone" style="width: 20px; cursor:pointer; float:left;"><i class="fa fa-bars" style="font-size: 24px;"></i></div>
-					</td>
-					<td class="checkbox-column" style="line-height:120px;">
-						<input type="checkbox" class="minimal" name="check[]" value="{$slide->id|escape}">
-					</td>
-					<td style="line-height:30px;">
-						{if $slide->filename}<a href="{url module=SlideAdmin id=$slide->id return=$smarty.server.REQUEST_URI}"><img src="{$config->root_url}/files/uploads/{$slide->filename}" style="max-width: 500px; max-height:120px;"></a>{/if}
-					</td>
-					<td style="line-height:120px;">
-						<a href="{url module=SlideAdmin id=$slide->id return=$smarty.server.REQUEST_URI}" class="btn btn-sm btn-flat btn-primary"><i class="fa fa-pencil"></i></a>
-						<button class="btn btn-sm btn-flat {if !$slide->visible}btn-default{else}btn-success act{/if} enable" ><i class="fa fa-lightbulb-o"></i></button>
-						<button class="btn btn-sm btn-flat btn-danger delete"><i class="fa fa-trash-o"></i></button>
-					</td>
-				</tr>
-				{/foreach}
-				{else}
-				<tr>
-					<td colspan="4">
-						Слайдов нет
-					</td>
-				</tr>
-				{/if}
-				</tbody>
-			</table>
-			<div class="col-lg-12">
-			{include file='pagination.tpl'}
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-picture s-6"></i>
+					</span>
+					<span class="logo-text h4">Слайдер</span>
+				</div>
 			</div>
 		</div>
-		<!-- /.box-body -->		
-	  </div>
-	  <!-- /.box -->
-	  
-	  <div class="row">
-		<div class="form-group col-lg-2">
-			<select id="action" class="form-control" name="action">
-				<option value="enable">Сделать видимыми</option>
-				<option value="disable">Сделать невидимыми</option>
-				<option value="delete">Удалить</option>
-			</select>
+		
+		<div class="col-auto">
+			<a href="{url module=SlideAdmin id=null}" class="btn btn-light fuse-ripple-ready"><i class="icon-plus mr-0 mr-md-2"></i><span class="m-none"> Добавить слайд</span></a>
 		</div>
-		  
-		<div class="col-lg-2">
-			<button type="submit" class="btn btn-block btn-success btn-flat"value="Применить">Применить</button>
-		</div>
-	  </div>
 	</div>
-	<!-- /.col -->
-  </div>
-  <!-- /.row -->
-</form>
-</section>
+	<!-- / HEADER -->
+
+	<div class="page-content-wrapper">
+
+		<div class="page-content p-4 p-sm-6">
+		
+		<form method="post">
+		<input type="hidden" name="session_id" value="{$smarty.session.id}">		
+			<div id="todo" class="card">
+				
+				<div id="list" class="todo-items w-100">
+					<div class="todo-item pr-4 pl-11 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center ">
+
+						<label id="check_all" class="custom-control custom-checkbox">
+							<input type="checkbox" class="custom-control-input" />
+							<span class="custom-control-indicator"></span>
+						</label>
+
+						<div class="info col px-4">
+							Изображение
+						</div>
+
+					</div>
+					<div id="slides_list">
+						{foreach $slides as $slide}
+						<div class="todo-item sort-item pl-0 pr-2 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center ">
+							
+							<div class="handle mr-1 px-2">
+								<i class="icon icon-drag"></i>
+							</div>
+							<input type="hidden" name="positions[{$slide->id}]" value="{$slide->position}">
+							
+							<label class="custom-control custom-checkbox">
+								<input type="checkbox" class="custom-control-input" name="check[]" value="{$slide->id}"/>
+								<span class="custom-control-indicator"></span>
+							</label>
+
+							<div class="info col px-4 mb-3 mb-sm-0 d-flex align-items-center justify-content-left">
+								<div class="title mr-4">
+									<a class="td-wh-none" href="{url module=SlideAdmin id=$slide->id return=$smarty.server.REQUEST_URI}"><img src="/files/slider/{$slide->filename|escape}" style="width: 100%; max-width: 550px; height:auto;"></a>
+								</div>
+							</div>
+
+							<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
+
+								<a href="{url module=SlideAdmin id=$slide->id}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
+									<i class="icon icon-pencil text-blue"></i>
+								</a>
+								
+								<button type="button" class="btn btn-icon visible" data-toggle="tooltip" data-placement="bottom" title="Вкл\Выкл слайд">
+									<i class="icon icon-lightbulb {if $slide->visible}text-yellow-900 enbl{/if}"></i>
+								</button>
+
+								<button type="button" class="btn btn-icon delete" data-toggle="tooltip" data-placement="bottom" title="Удалить">
+									<i class="icon icon-trash text-red"></i>
+								</button>
+
+							</div>
+						</div>
+						{/foreach}
+					</div>
+				</div>
+				
+				 <div class="card-footer py-6">
+					 <div class="row">
+						<div class="col-12 col-sm-4 col-md-3 mb-3 mb-sm-0">
+							<select id="action" class="form-control" name="action">
+								<option value="">Выберите действие</option>
+								<option value="enable">Отобразить на сайте</option>
+								<option value="disable">Отключить на сайте</option>
+								<option value="delete">Удалить</option>
+							</select>
+						</div>
+						  
+						<div class="col-12 col-md-2 col-sm-6 col-xs-6">
+							<button type="submit" class="btn btn-secondary btn-sm fuse-ripple-ready" value="Применить">Применить</button>
+						</div>
+					</div>
+				 </div>
+			</div>
+		</form>
+		</div>
+	</div>
+</div>

@@ -17,6 +17,7 @@
       <a href='mailto:{$feedback->email|escape}?subject={$settings->site_name}'>{$feedback->email|escape}</a>
     </td>
   </tr>
+  {if $feedback->phone}
   <tr>
     <td style='padding:6px; width:170; background-color:#f0f0f0; border:1px solid #e0e0e0;font-family:arial;'>
       Телефон
@@ -25,6 +26,7 @@
      {$feedback->phone|escape}
     </td>
   </tr>
+  {/if}
   <tr>
     <td style='padding:6px; background-color:#f0f0f0; border:1px solid #e0e0e0;font-family:arial;'>
       IP

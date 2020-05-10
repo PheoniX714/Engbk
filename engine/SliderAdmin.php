@@ -43,9 +43,7 @@ class SliderAdmin extends Engine
 		    }
 		}		
 		
- 	}
-
-  
+ 	}  
 
 	// Отображение
   	$slides = $this->slider->get_slides();

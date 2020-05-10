@@ -1,5 +1,5 @@
 <?PHP
-session_start();
+if(!isset($_SESSION)) session_start();
 require_once('View.php');
 
 class IndexView extends View

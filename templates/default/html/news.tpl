@@ -1,29 +1,32 @@
-<section class="news-page">
-	<div class="container">
+{* Список записей блога *}
 
-		<div id="path">
-			<a href="./">{if $language->id == 2}Головна{elseif $language->id == 4}Home{else}Главная{/if}</a> / {if $language->id == 2}Блог{elseif $language->id == 4}Blog{else}Блог{/if}
-		</div>
-		
-		<div class="clear"></div>
-		
-		{foreach $posts as $post}
-		<div class="row news">
-			<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
-				<div class="image">
-					<a href="news/{$post->url}"><img src="files/uploads/{$post->image}" alt="{$post->name|escape}" /></a>
-				</div>
-			</div>
-			<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
-				<div class="news-text">
-					<h2><a href="news/{$post->url}">{$post->name|escape}</a></h2>
-					<div class="post-annotation">{$post->annotation}</div>
-					<div class="more"><a href="news/{$post->url}">{if $language->id == 2}Детальніше{elseif $language->id == 4}More{else}Подробнее{/if}</a></div>
-				</div>
-			</div>
-		</div>
-		{/foreach}
-		
-		{include file='pagination.tpl'}
+{* Канонический адрес страницы *}
+{$canonical="/news" scope=parent}
+
+{if $page->image}
+<div class="top-banner hidden-xs">
+	<img src="files/pages/{$page->image}" alt="" title="">
+</div>
+{/if}
+
+<div class="o-title" style="margin:20px 0 20px;">
+	<h2 style="margin-bottom:30px; font-weight:bold;">Наши обзоры</h2>
+	<div class="sep"></div>
+</div>
+
+<!-- Статьи /-->
+<div id="news">
+	{foreach $posts as $post}
+	<div class="col-xs-12 col-sm-6 col-md-4">
+		<div class="n-img"><a data-post="{$post->id}" href="news/{$post->url}"><img src="files/news/{$post->image|escape}" alt="{$post->name|escape}" title="{$post->name|escape}"></a></div>
+		<h2><a data-post="{$post->id}" href="news/{$post->url}">{$post->name|escape}</a></h2>
+		<div class="n-date">{$post->date|date}</div>
+		<div class="n-annotation">{$post->annotation}</div>
+		<div class="n-more"><a data-post="{$post->id}" href="news/{$post->url}">Читать дальше </a></div>
 	</div>
-</section>
+	{/foreach}
+</div>
+<!-- Статьи #End /-->    
+
+{include file='pagination.tpl'}
+          

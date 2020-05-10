@@ -1,257 +1,242 @@
 {* Title *}
-{$meta_title = "{$menu->name}" scope=parent}
-{$sm_groupe = 'pages' scope=parent}
-{$sm_item = "menu_{$menu->id}" scope=parent}
-{$page_additional_css = '
-	<link rel="stylesheet" href="./templates/js/plugins/iCheck/minimal/blue.css">
-	
-' scope=parent}
+{$meta_title = "{$menu->name}" scope='root'}
+{$sm_groupe = 'pages' scope='root'}
+{$sm_item = "menu_{$menu->id}" scope='root'}
 
-{$page_additional_js = '
-	<script src="./templates/js/plugins/iCheck/icheck.min.js"></script>
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/modules/pages.js"></script>
-' scope=parent}
+{capture name=js}
+{literal}
+<script>
+	var pages_list = [].slice.call(document.querySelectorAll('.nested-sortable'));
+	// Loop through each nested sortable element
+	for (var i = 0; i < pages_list.length; i++) {
+		new Sortable(pages_list[i], {
+			group: {
+				name: 'nested',
+				put: false,
+				pull: false
+			},
+			fallbackOnBody: true,
+			swapThreshold: 0.65,
+			multiDrag: true,
+			selectedClass: 'bg-yellow-100',
+			handle: '.handle',
+			animation: 150,
+			ghostClass: 'bg-blue-100',
+			onEnd: function() {
+				$.ajax({url: document.location.href, type: "POST", dataType: "html", data: $('form').serialize()});
+			}
+		});
+	}
 
-<section class="content-header">
-	<h1>{foreach $menus as $m}{if $m->id == $menu->id}{$menu->name}{/if}{/foreach}<small>Статические страницы</small></h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li class="active">{foreach $menus as $m}{if $m->id == $menu->id}{$menu->name}{/if}{/foreach}</li>
-	</ol>
-</section>
-
-<!-- Main content -->
-<section class="content">
-	<form id="list_form" method="post">
-	<!-- Main row -->
-      <div class="row">
-        <!-- Left col -->
-        <div class="col-md-12">
-          <div class="box box-success">
-            <div class="box-header">
-			  <i class="fa fa-files-o"></i>
-			  <h3 class="box-title" style="line-height:1.5">Управление страницами</h3>
-			  <a href="{url module=PageAdmin id=null}" class="btn btn-sm btn-primary btn-flat pull-right"><i class="fa fa-plus"></i> <b> Добавить страницу</b></a>
-			</div>
-            <!-- /.box-header -->
-            <div class="box-body no-padding">
-				<input type="hidden" name="session_id" value="{$smarty.session.id}">   
-				{function name=pages_tree}
-				{if $pages}
-				<ul class="sortable-list sortable">
-					{foreach $pages as $page}
-					<li>
-					  <input type="hidden" name="positions[{$page->id}]" value="{$page->position}">
-					  <!-- drag handle -->
-						<span class="handle" style="margin-left: {$level*30}px;">
-							<i class="fa fa-bars" style="font-size: 20px;"></i>
-						</span>
-					  <!-- checkbox -->
-					  <input type="checkbox" class="minimal" name="check[]" value="{$page->id}">
-					  <!-- todo text -->
-					  <span class="text"><a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}">{$page->name|escape}</a></span>
-					  <!-- General tools such as edit or delete-->
-					  <div class="tools">
-						<a href="../{$page->pre_url}{$page->url}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-desktop"></i></a>
-						<a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}" class="btn btn-primary btn-sm btn-flat" target="_blank"><i class="fa fa-edit"></i></a>
-						<button class="btn btn-sm {if !$page->visible}btn-default{else}btn-success enbl{/if} enable btn-flat" ><i class="fa fa-lightbulb-o"></i></button>
-						<button class="btn btn-sm btn-danger delete btn-flat"><i class="fa fa-trash-o"></i></button>
-					  </div>
-					</li>
-					{pages_tree pages=$page->subpages level=$level+1}
-					{/foreach}
-				</ul>
-				{/if}
-				{/function}
-				{pages_tree pages=$pages level=0}	
-            </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /.box -->
-        </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
-	  
-	  <div class="row">
-		<div class="form-group col-md-3 col-lg-2">
-			<select id="action" class="form-control" name="action">
-				<option value="">Выберите действие</option>
-				<option value="enable">Отобразить на сайте</option>
-				<option value="disable">Отключить на сайте</option>
-				<option value="delete">Удалить</option>
-			</select>
-		</div>
+	$(function () {
+		$("#check_all").change(function() {
+			if($('#check_all').hasClass('checked')){
+				$('#list .custom-control-input:not(:disabled)').attr('checked', false);
+				$('#check_all').removeClass('checked');
+			}else{
+				$('#list .custom-control-input:not(:disabled)').attr('checked', true);
+				$('#check_all').addClass('checked');
+			}
+		});		
 		  
-		<div class="col-md-2">
-			<button type="submit" class="btn btn-block btn-success btn-flat" value="Применить">Применить</button>
+		$("button.visible").on('click', function(){
+			var icon        = $(this);
+			var line        = icon.closest("#list .todo-item");
+			var tag        	= line.find(".visible-tag");
+			var but         = icon.children(".icon-lightbulb");
+			var id          = line.find('input[type="checkbox"][name*="check"]').val();
+			var session_id  = icon.closest('form').find('input[type="hidden"][name*="session_id"]').val();
+			var state       = but.hasClass('enbl')?0:1;
+			$.ajax({
+				type: 'POST',
+				url: 'ajax/update_object.php',
+				data: {'object': 'page', 'id': id, 'values': {'visible': state}, 'session_id': session_id},
+				success: function(data){
+					if(!state){
+						but.removeClass('text-yellow-900 enbl');
+						tag.show();
+					}else{
+						but.addClass('text-yellow-900 enbl');
+						tag.hide();
+					}			
+				},
+				dataType: 'json'
+			});	
+			return false;
+		});
+		
+		$("button.delete").on("click", function(){
+			$('#list .todo-item input[type="checkbox"][name*="check"]').prop('checked', false);
+			$(this).closest("#list .todo-item").find('input[type="checkbox"][name*="check"]').prop('checked', true);
+			$(this).closest("form").find('select[name="action"] option[value=delete]').prop('selected', true);
+			$(this).closest("form").submit();
+			return false;
+		});
+		
+		$("form").submit(function() {
+			if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
+				return false;	
+		});
+		
+	  });
+</script>
+{/literal}
+{/capture}
+
+<div id="contacts" class="page-layout simple left-sidebar-floating tabbed">
+
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-file-multiple s-6"></i>
+					</span>
+					<span class="logo-text h4">Страницы</span>
+				</div>
+			</div>
 		</div>
-	  </div>
-	</form>
-	</section>
-
-{*
-<div class="content-header">
-	<h2 class="content-header-title">{$menu->name}</h2>
-	<ol class="breadcrumb">
-		<li><a href="index.php">Главная</a></li>
-		<li class="active">{foreach $menus as $m}{if $m->id == $menu->id}{$menu->name}{/if}{/foreach}</li>
-	</ol>
-</div> <!-- /.content-header -->
-
-<ul id="myTab1" class="nav nav-pills">
-	{foreach $menus as $m}
-	<li {if $m->id == $menu->id}class="active"{/if}>
-		<a href="{url module=PagesAdmin menu_id=$m->id}">{$m->name}</a>
-	</li>
-	{/foreach}
+		
+		<div class="col-6 col-auto d-flex justify-content-end">
+			<a href="./index.php?module=PageAdmin&menu_id={$menu->id}" class="btn btn-light fuse-ripple-ready"><i class="icon-file-plus mr-0 mr-md-2"></i><span class="m-none"> Добавить страницу</span></a>
+		</div>
+	</div>
 	
-	<a class="btn btn-secondary btn-sm pull-right" href="{url module=PageAdmin}"><i class="fa fa-plus"></i> Добавить страницу</a>
-</ul>
+	<div class="page-content-wrapper">
 
-<div class="row">
-		<form id="list_form" method="post">
-		<input type="hidden" name="session_id" value="{$smarty.session.id}">
-        <div class="col-md-12">
+		<div class="page-content p-4 p-sm-6">
+		
+		<form method="post">
+		<input type="hidden" name="session_id" value="{$smarty.session.id}">	
+			<div class="collapse {if $main_language->id != $filter_language}show{/if}" id="filters">
+				<div class="card mb-3">
+					<div class="card-body d-flex align-items-end flex-wrap">
+						<div class="form-group pt-0 mb-2 col-12 col-sm-4 col-md-2">
+							<label for="filter_language">Язык перевода</label>
+							<select class="form-control" id="filter_language" name="filter_language">
+								{foreach $languages as $l}
+								<option value="{$l->id}" {if $filter_language == $l->id}selected{/if}>{$l->name|escape}</option>
+								{/foreach}	
+							</select>
+						</div>
+						
+						<div class="col">
+							<button class="btn btn-primary btn-sm" type="submit">Фильтровать</button>
+						</div>
+					</div>
+				</div>
+			</div>
 
-			<div class="portlet">
-
-				<div class="portlet-header">
-					<h3>
-						<i class="fa fa-text-files"></i>
-						<b>Управление страницами</b>
-					</h3>
-					
-				</div> <!-- /.portlet-header -->
-
-				<div class="portlet-content">       
-
-					{if $pages}			
-					
+			<div id="todo" class="card">
+				<div id="list" class="todo-items w-100">
 					{function name=pages_tree}
-						
+					{if $level == 0}
+					<div class="todo-item pr-4 pl-11 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
+
+						<label id="check_all" class="custom-control custom-checkbox">
+							<input type="checkbox" class="custom-control-input" />
+							<span class="custom-control-indicator"></span>
+						</label>
+
+						<div class="info col px-4">
+
+							<div class="title d-flex justify-content-between align-items-center">
+								Название страницы
+								
+								<button class="btn btn-icon pull-right" type="button" data-toggle="collapse" data-target="#filters" aria-expanded="false" aria-controls="filters"><i class="icon-settings" data-toggle="tooltip" data-placement="bottom" title="Открыть/Закрыть фильтры"></i></button>
+							</div>
+						</div>
+					</div>
+					{/if}
+					
 					{if $pages}
-					<div id="list" class="sortable col-sm-12">
-						
+					<div class="nested-sortable">
 						{foreach $pages as $page}
-						<div class="row">		
-							<div class="tree_row_pages">
+						<div class="sort-item">
+							<div class="todo-item pl-{$level*7} pr-2 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
+
+								<div class="handle mr-1 px-2">
+									<i class="icon icon-drag"></i>
+								</div>
 								<input type="hidden" name="positions[{$page->id}]" value="{$page->position}">
-								<div class="page_nav" style="margin-left: {$level*30}px;">
-									<div class="move_zone" ><i class="fa fa-bars"></i></div>
-									<input type="checkbox" class="icheck-input" name="check[]" value="{$page->id}" />
+
+								<label class="custom-control custom-checkbox">
+									<input type="checkbox" class="custom-control-input" name="check[]" value="{$page->id}" />
+									<span class="custom-control-indicator"></span>
+								</label>
+
+								<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-left flex-column flex-sm-row">
+
+									<div class="title mr-4">
+										<a class="td-wh-none {if !$page->name}text-red{/if}" href="{url module=PageAdmin id=$page->id language_id=$filter_language return=null}">{if !$page->name}Отсутствует перевод{else}{$page->name|escape}{/if}</a>
+									</div>
+
+									<div class="tags">
+										<div class="tag badge visible-tag" {if $page->visible}style="display:none;"{/if}>
+											<div class="row no-gutters align-items-center">
+												<div class="tag-color mr-2 bg-red"></div>
+												<div class="tag-label">Отключена</div>
+											</div>
+										</div>
+										{if $page->need_translate and $page->need_translate|count > 0}
+										<div class="tag badge language-tag">
+											<div class="row no-gutters align-items-center">
+												<div class="tag-color mr-2 bg-red"></div>
+												<div class="tag-label">Отсутствуют переводы: {foreach $page->need_translate as $nt}<b>{$nt|upper}</b> {/foreach}</div>
+											</div>
+										</div>
+										{/if}
+									</div>
 								</div>
-								<div class="page_title">
-									<a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}">{$page->name|escape}</a>
-								</div>
-								<div class="page_ctrl">
-									<a href="../{$page->url}" target="_blank" class="btn btn-sm btn-secondary"><i class="fa fa-desktop"></i></a>
-									<a href="{url module=PageAdmin id=$page->id return=$smarty.server.REQUEST_URI}" class="btn btn-sm btn-secondary"><i class="fa fa-pencil"></i></a>
-									<button class="btn btn-sm {if !$page->visible}btn-default{else}btn-secondary enbl{/if} enable" title="Активна"><i class="fa fa-lightbulb-o"></i></button>
-									<button class="btn btn-sm btn-primary delete" title="Удалить"><i class="fa fa-trash-o"></i></button>
+
+								<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
+
+									<a href="{url module=PageAdmin id=$page->id language_id=$filter_language return=null}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
+										<i class="icon icon-pencil text-blue"></i>
+									</a>
+									
+									<button type="button" class="btn btn-icon {if $page->id != 1 and $page->id != 2 }visible{/if}" data-toggle="tooltip" data-placement="bottom" title="Вкл\Выкл страницу">
+										<i class="icon icon-lightbulb {if $page->id == 1 or $page->id == 2 }text-yellow-900{elseif $page->visible}text-yellow-900 enbl{/if}"></i>
+									</button>
+									
+									<a href="../{$page->url}" class="btn btn-icon" target="__blank" data-toggle="tooltip" data-placement="bottom" title="Открыть в новом окне">
+										<i class="icon icon-open-in-new text-blue"></i>
+									</a>
+									
+									<button type="button" class="btn btn-icon {if $page->id != 1 and $page->id != 2 }delete{/if}" data-toggle="tooltip" data-placement="bottom" title="Удалить">
+										<i class="icon icon-trash {if $page->id == 1 or $page->id == 2 }text-grey{else}text-red{/if}"></i>
+									</button>
+									
 								</div>
 							</div>
-							{pages_tree pages=$page->subpages level=$level+1}
+							{pages_tree pages=$page->subcategories level=$level+1}
 						</div>
 						{/foreach}
-					
 					</div>
 					{/if}
 					{/function}
 					{pages_tree pages=$pages level=0}
-					
-					{else}
-						Нет страниц
-					{/if}
-
-					</div> <!-- /.table-responsive -->
-				</div> <!-- /.portlet-content -->
-
-			</div> <!-- /.portlet -->
-			{if $pages}	
-			<div class="col-sm-3">
-				<div class="form-group">
-				<select id="action" class="form-control" name="action">
-					<option value="enable">Сделать видимыми</option>
-					<option value="disable">Сделать невидимыми</option>
-					<option value="delete">Удалить</option>
-				</select>
 				</div>
-				
-			</div>
-			<div class="col-sm-3">
-				<div class="form-group">
-					<input class="btn btn-success" type="submit" value="Применить">
+
+				<div class="card-footer py-6">
+					 <div class="row">
+						<div class="col-12 col-sm-4 col-md-3 mb-3 mb-sm-0">
+							<select id="action" class="form-control" name="action">
+								<option value="">Выберите действие</option>
+								<option value="enable">Отобразить на сайте</option>
+								<option value="disable">Отключить на сайте</option>
+								<option value="delete">Удалить</option>
+							</select>
+						</div>
+						  
+						<div class="col-12 col-md-2 col-sm-6 col-xs-6">
+							<button type="submit" class="btn btn-secondary btn-sm fuse-ripple-ready" value="Применить">Применить</button>
+						</div>
+					</div>
 				</div>
-				
 			</div>
-			{/if}
-		</div> <!-- /.col -->
 		</form>
-</div> <!-- /.row -->
-
-{literal}
-<script>
-$(function() {
-
-	// Сортировка списка
-	$(".sortable").sortable({
-		items:".row",
-		handle: ".move_zone",
-		tolerance:"pointer",
-		scrollSensitivity:40,
-		opacity:0.7, 
-		axis: "y",
-		update:function()
-		{
-			$("#list_form input[name*='check']").attr('checked', false);
-			$("#list_form").ajaxSubmit();
-		}
-	});
-
-	// Удалить 
-	$('button.delete').on('click', function(){
-		$('#list_form input[type="checkbox"][name*="check"]').attr('checked', false);
-		$(this).closest(".row").find('input[type="checkbox"][name*="check"]').attr('checked', true);
-		$(this).closest("form").find('select[name="action"] option[value=delete]').attr('selected', true);
-		$(this).closest("form").submit();
-	});
-	
-	// Скрыт/Видим
-	$("button.enable").on('click', function(){
-		var icon        = $(this);
-		var line        = icon.closest(".row");
-		var but         = icon.closest(".btn");
-		var id          = line.find('input[type="checkbox"][name*="check"]').val();
-		var state       = but.hasClass('enbl')?0:1;
-		$.ajax({
-			type: 'POST',
-			url: 'ajax/update_object.php',
-			data: {'object': 'page', 'id': id, 'values': {'visible': state}, 'session_id': '{/literal}{$smarty.session.id}{literal}'},
-			success: function(data){
-				if(!state){
-					but.removeClass('btn-secondary');
-					but.addClass('btn-default');
-					but.removeClass('enbl');
-				}else{
-					but.removeClass('btn-default');
-					but.addClass('btn-secondary');
-					but.addClass('enbl');
-				}			
-			},
-			dataType: 'json'
-		});	
-		return false;	
-	});
-	
-	
-	$("form").submit(function() {
-		if($('select[name="action"]').val()=='delete' && !confirm('Подтвердите удаление'))
-			return false;	
-	});
-});
-</script>
-{/literal}
-*}
+		</div>
+	</div>
+</div>

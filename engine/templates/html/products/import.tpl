@@ -1,169 +1,172 @@
-{$meta_title='Импорт товаров' scope=parent}
-{$sm_groupe = 'catalog' scope=parent}
-{$sm_item = 'products-import' scope=parent}
+{$meta_title='Импорт товаров' scope='root'}
+{$sm_groupe = 'products' scope='root'}
+{$sm_item = 'import' scope='root'}
 
-{$page_additional_css = '
+{capture name=js}
+{if $filename}
+{literal}
+<script>
+	var in_process=false;
+	var count=1;
+
+	// On document load
+	$(function(){
+ 		$("#progressbar").progressbar({ value: 1 });
+		in_process=true;
+		do_import();
+	});
+  
+	function do_import(from)
+	{
+		from = typeof(from) != 'undefined' ? from : 0;
+		$.ajax({
+ 			 url: "ajax/import.php",
+ 			 	data: {from:from},
+ 			 	dataType: 'json',
+  				success: function(data){
+  					for(var key in data.items)
+  					{
+						if(data.items[key].status == 'updated')
+							var status = '<div class="tags"><div class="tag badge"><div class="row no-gutters align-items-center"><div class="tag-color mr-2 bg-green"></div><div class="tag-label">Обновлен</div></div></div></div>';
+						else
+							var status = '<div class="tags"><div class="tag badge"><div class="row no-gutters align-items-center"><div class="tag-color mr-2 bg-blue"></div><div class="tag-label">Добавлен</div></div></div></div>';
+					
+    					$('div#results').prepend('<div class="todo-item sort-item pr-2 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center "><div class="info px-4 d-flex align-items-center justify-content-left">'+count+'</div><div class="info col px-4 d-flex align-items-center justify-content-left"><div class="title mr-4"><a class="td-wh-none" href="index.php?module=ProductAdmin&id='+data.items[key].product.id+'">'+data.items[key].product.name+' '+data.items[key].variant.name+'</a></div>'+status+'</div></div>');
+    					count++;
+    				}
+					value = 100*data.from/data.totalsize;
+					value = value.toFixed();
+    				$("#progressbar").text(value + "%").css("width", value + "%");
+					if(data != false && !data.end)
+    				{
+    					do_import(data.from);
+    				}
+    				else
+    				{
+    					in_process = false;
+    				}
+  				},
+				error: function(xhr, status, errorThrown) {
+					alert(errorThrown+'\n'+xhr.responseText);
+        		}  				
+		});
 	
-' scope=parent}
+	} 
+</script>
+{/literal}
+{/if}
+{/capture}
 
-{$page_additional_js = '
-	<script src="./templates/js/plugins/jQueryUI/jquery-ui.min.js"></script>
-	<script src="./templates/js/jquery.sticky.js"></script>
-	<script src="./templates/js/modules/products_import.js"></script>
-' scope=parent}
+<div id="contacts" class="page-layout simple left-sidebar-floating">
 
-<style>
-	.ui-progressbar-value { background-color:#b4defc; background-position:left; border-color: #009ae2;}
-	#progressbar{ clear: both; height:29px;}
-	#result{ clear: both; width:100%;}
-</style>
-{if $message_error != 'no_permission'}
-	
-{if $filename}	
-<section class="content-header">
-	<h1>Импорт товаров</h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li><a href="index.php?module=ProductsAdmin">Каталог товаров</a></li>
-        <li class="active">Импорт</li>
-	</ol>
-</section>
-<section class="content">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-file-text"></i>
-				  <h3 class="box-title" style="line-height:1.5">Импорт "{$filename|escape}"</h3>
-				 <!--  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				  <a href="{url module=PostAdmin id=null}" class="btn btn-primary btn-sm pull-right btn-flat mr10"><i class="fa fa-plus"></i> Добавить новую новость</a>  -->
+	<div class="page-header bg-secondary text-auto row no-gutters align-items-center justify-content-between p-4 p-sm-6">
+		<div class="col">
+			<div class="row no-gutters align-items-center flex-nowrap">
+				<div class="logo row no-gutters align-items-center flex-nowrap">
+					<span class="logo-icon mr-4">
+						<i class="icon-upload s-6"></i>
+					</span>
+					<span class="logo-text h4">Импорт товаров</span>
 				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					{if $message_error}
-					<div class="col-md-12">
-						<div class="alert alert-danger alert-dismissible">
-							<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-							<h4><i class="icon fa fa-ban"></i> {if $message_error == 'no_permission'}Установите права на запись в папку {$import_files_dir}
-							{elseif $message_error == 'convert_error'}Не получилось сконвертировать файл в кодировку UTF8
-							{elseif $message_error == 'upload_error'}Ошибка загрузки файла
-							{elseif $message_error == 'locale_error'}На сервере не установлена локаль {$locale}, импорт может работать некорректно
-							{else}{$message_error}{/if}</h4>
-						</div>
-					</div>
-					{/if}
-				
-					<div class="progress">
-						<div id='progressbar' class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 1%">
-						  <span class="sr-only">40% Complete (success)</span>
-						</div>
-					</div>
-					<ul id='import_result'></ul>
-				</div>
-				<!-- /.box-body -->
 			</div>
 		</div>
 	</div>
-</section>
-{else}
-<section class="content-header">
-	<h1>Импорт товаров</h1>
-	<ol class="breadcrumb">
-		<li><a href="./"><i class="fa fa-home"></i> Главная</a></li>
-		<li><a href="index.php?module=ProductsAdmin">Каталог товаров</a></li>
-        <li class="active">Импорт</li>
-	</ol>
-</section>
+		
+	<div class="page-content-wrapper">
+		<div class="page-content p-4 p-sm-6">
+			<div class="widget-group no-gutters">
+				
+				{if $message_success}
+				<script>  
+					$(document).ready(function(){  
+						PNotify.defaults.styling = 'material';
+						PNotify.defaults.icons = 'material';
+						PNotify.success({
+						  title: 'Готово!',
+						  text: "{if $message_success == 'added'}Категория добавлена{elseif $message_success == 'updated'}Категория обновлена{/if}",
+						  stack: {literal}{dir1: 'up', dir2: 'left', 'firstpos1': 25, 'firstpos2': 25}{/literal}
+						});
+					});   
+				</script> 
+				{/if}
+				
+				{if $message_error}
+				<script>  
+					$(document).ready(function(){   
+						PNotify.defaults.styling = 'material';
+						PNotify.defaults.icons = 'material';
+						PNotify.error({
+						  title: 'Ой, что то не так...',
+						  text: "{if $message_error == 'no_permission'}Установите права на запись в папку {$import_files_dir}{elseif $message_error == 'convert_error'}Не получилось сконвертировать файл в кодировку UTF8{elseif $message_error == 'upload_error'}Ошибка загрузки файла{elseif $message_error == 'locale_error'}На сервере не установлена локаль {$locale}, импорт может работать некорректно{else}{$message_error}{/if}",
+						  stack: {literal}{dir1: 'up', dir2: 'left', 'firstpos1': 25, 'firstpos2': 25}{/literal}
+						});
+					});   
+				</script> 
+				{/if}
+				<form method=post id=product enctype="multipart/form-data">
+				<div class="row">
+					{if $message_error != 'no_permission'}
+					{if $filename}
+					<div class="col-12 mb-5">
+						<div class="card mb-3">
+							<div class="card-header">
+								<b>Импорт "{$filename|escape}"</b>
+							</div>
+							<div class="card-body">
+								<div class="progress">
+									<div id="progressbar" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0"
+										 aria-valuemin="0" aria-valuemax="100">
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<div id="todo" class="card">
+							<div id="list" class="todo-items w-100">
+								<div class="todo-item py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center ">
+									<div class="info px-4">
+										<div class="title">
+											#
+										</div>
+									</div>
+									<div class="info col px-4">
+										<div class="title">
+											Название товара
+										</div>
+									</div>
 
-<section class="content">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="box box-primary"> 
-				<div class="box-header with-border">
-				  <i class="fa fa-file-text"></i>
-				  <h3 class="box-title" style="line-height:1.5">Импорт</h3>
-				 <!--  <input class="btn btn-success btn-sm pull-right btn-flat" type="submit" name="" value="Сохранить">
-				  <a href="{url module=PostAdmin id=null}" class="btn btn-primary btn-sm pull-right btn-flat mr10"><i class="fa fa-plus"></i> Добавить новую новость</a>  -->
-				</div>
-				<!-- /.box-header -->
-				<div class="box-body">
-					{if $message_error}
-					<div class="row">
-						<div class="col-md-12">
-							<div class="alert alert-danger alert-dismissible">
-								<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-								<h4><i class="icon fa fa-ban"></i> {if $message_error == 'no_permission'}Установите права на запись в папку {$import_files_dir}
-								{elseif $message_error == 'convert_error'}Не получилось сконвертировать файл в кодировку UTF8
-								{elseif $message_error == 'upload_error'}Ошибка загрузки файла
-								{elseif $message_error == 'locale_error'}На сервере не установлена локаль {$locale}, импорт может работать некорректно
-								{else}{$message_error}{/if}</h4>
+								</div>
+								<div id="results"></div>
 							</div>
 						</div>
 					</div>
-					{/if}				
-		
-					<!-- Основная форма -->
-					<div class="row">
-						<form method=post id=product enctype="multipart/form-data">
-						<div class="col-md-3">	
-						<input type=hidden name="session_id" value="{$smarty.session.id}">
-						<input name="file" class="import_file" type="file" value="" />
-						</div>
-						<div class="col-md-2">
-						<input class="btn btn-block btn-success btn-flat" type="submit" name="" value="Загрузить" />
-						
-						</div>
-						
-						<div class="col-md-12">
-						<p>
-							<b>(максимальный размер файла &mdash; {if $config->max_upload_filesize>1024*1024}{$config->max_upload_filesize/1024/1024|round:'2'} МБ{else}{$config->max_upload_filesize/1024|round:'2'} КБ{/if})</b>
-						</p>
-
-						</div>
-						</form>
-					</div>		
-					
-					<div class="row">
-						<div class="col-md-12">
-						
-							<h3>Справка</h3>
-						
-							<blockquote>
+					{else}
+					<div class="col-12 col-md-4 mb-5">
+						<div class="card mb-3">
+							<div class="card-body">
+								<input type=hidden name="session_id" value="{$smarty.session.id}">
+								<input name="file" class="import_file mb-3" type="file" value="" />
+								
 								<p>
-									Сохраните таблицу в формате CSV
+									<b>(максимальный размер файла &mdash; {if $config->max_upload_filesize>1024*1024}{$config->max_upload_filesize/1024/1024|round:'2'} МБ{else}{$config->max_upload_filesize/1024|round:'2'} КБ{/if})</b>
 								</p>
-								<p>
-									В первой строке таблицы должны быть указаны названия колонок в таком формате:
-							
-									<ul>
-										<li><label>Категория</label> категория товара</li>
-										<li><label>Товар</label> системное название товара</li>
-										<li><label>Название</label> название товара отображаемое на сайте</li>
-										<li><label>Вариант</label> название варианта</li>
-										<li><label>Цена</label> цена товара</li>
-										<li><label>Старая цена</label> старая цена товара</li>
-										<li><label>Артикул</label> артикул товара</li>
-										<li><label>Видим</label> отображение товара на сайте (0 или 1)</li>
-										<li><label>Изображения</label> имена файлов изображений, через запятую</li>
-										<li><label>Ид группы</label> ид для объединения нескольких товаров в группу</li>
-										<li><label>Код цвета</label> шестнадцатеричный код цвета, используется в группах товаров</li>
-										<li><label>product_name_ua</label> название товара для украинского языка</li>
-									</ul>
-								</p>
-								<p>
-									Любое другое название колонки трактуется как название свойства товара
-								</p>
-								<p>
-									<b><a href='./files/import/example.csv'>Скачать пример файла</a></b>
-								</p>
-							 </blockquote>
+								
+							</div>
+							<div class="card-footer">
+								<div class="row">
+									<div class="col-12 text-right">
+										<button class="btn btn-success btn-sm text-white fuse-ripple-ready" type="submit" value="Сохранить">Загрузить</button>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
+					
+					{/if}
+					{/if}
 				</div>
-				<!-- /.box-body -->
+				</form>
 			</div>
 		</div>
 	</div>
-</section>
-{/if}
-{/if}
+</div>

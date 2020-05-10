@@ -1,5 +1,7 @@
 User-agent: *
 
+Sitemap: /sitemap.xml
+
 Disallow: /sections/404
 
 Disallow: /engine/

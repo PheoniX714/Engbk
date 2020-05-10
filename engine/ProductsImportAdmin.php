@@ -10,8 +10,6 @@ class ProductsImportAdmin extends Engine
 
 	public function fetch()
 	{
-		unlink($this->import_files_dir.$this->import_file);
-		
 		$this->templates->assign('import_files_dir', $this->import_files_dir);
 		if(!is_writable($this->import_files_dir))
 			$this->templates->assign('message_error', 'no_permission');

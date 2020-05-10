@@ -1,70 +1,120 @@
-{$wrapper = '' scope=parent}
+{$wrapper = '' scope='root'}
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Вход в защищенную зону FastCMS</title>
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Bootstrap 3.3.6 -->
-  <link rel="stylesheet" href="./templates/css/bootstrap.min.css">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
-  
-  <!-- Theme style -->
-  <link rel="stylesheet" href="./templates/css/theme.css">
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-  <![endif]-->
+    <title>Вход в админ панель FastCMS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    {*<link rel="shortcut icon" type="image/x-icon" href="../assets/favicon.ico" />*}
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700italic,700,900,900italic" rel="stylesheet">
+    <!-- STYLESHEETS -->
+    <style type="text/css">
+		[fuse-cloak],
+		.fuse-cloak {
+			display: none !important;
+		}
+    </style>
+	<!-- Icons.css -->
+    <link type="text/css" rel="stylesheet" href="./templates/css/font.css">
+    <!-- Animate.css -->
+    <link type="text/css" rel="stylesheet" href="./templates/css/animate.min.css">
+	<!-- Perfect Scrollbar -->
+    <link type="text/css" rel="stylesheet" href="./templates/js/plugins/perfect-scrollbar/css/perfect-scrollbar.min.css" />
+	<!-- Fuse Html -->
+    <link type="text/css" rel="stylesheet" href="./templates/js/plugins/fuse-html/fuse-html.min.css" />
+    <!-- Main CSS -->
+    <link type="text/css" rel="stylesheet" href="./templates/css/main.css">
+	<link type="text/css" rel="stylesheet" href="./templates/css/additional.css">
+    <!-- / STYLESHEETS -->
 </head>
-<body class="hold-transition login-page">
-<div class="login-box">
-  <div class="login-logo">
-    <a href="./"><b>Fast</b>CMS</a>
-  </div>
-  <!-- /.login-logo -->
-  <div class="login-box-body">
-    <p class="login-box-msg">Войдите для начала работы</p>
 
-    <form method="post">
-	<input type=hidden name="session_id" value="{$smarty.session.id}">
-		{if $error=='bad_data'}
-		<div class="alert alert-danger">
-			<a class="close" data-dismiss="alert" href="#" aria-hidden="true">×</a>
-			<strong>Ошибка!</strong> Введен неправильный логин или пароль.
-		</div>
-		{/if}
-      <div class="form-group has-feedback">
-        <input type="text" class="form-control" name="a-login" placeholder="Логин" tabindex="1">
-        <span class="glyphicon glyphicon-user form-control-feedback"></span>
-      </div>
-      <div class="form-group has-feedback">
-        <input type="password" class="form-control" name="password" placeholder="Пароль" tabindex="2">
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-      </div>
-      <div class="row">
-        <div class="col-xs-4 pull-right">
-          <button type="submit" class="btn btn-success btn-block btn-flat" name="login" value="Войти" tabindex="3">Войти</button>
+<body class="layout layout-vertical">
+    <main>
+        <div id="wrapper">
+            <div class="content-wrapper">
+                <div class="content custom-scrollbar">
+
+                    <div id="login" class="p-8">
+
+                        <div class="form-wrapper md-elevation-8 p-8 {if $animate}animated fadeInDown{/if}">
+
+                            <div class="logo">
+                                <img src="./templates/img/logo-128.png">
+                            </div>
+
+                            <h2 class="title mt-4 mb-8">FastCMS</h2>
+
+                            <form name="loginForm" method="post">
+								<input type=hidden name="session_id" value="{$smarty.session.id}">
+							
+								{if $error}
+								<div class="alert alert-danger mb-4" role="alert">
+									{if $error=='bad_data'}Неверный логин или пароль
+									{elseif $error=='access_blocked'}Судя по всему, Вы не знаете пароль... В целях безопасности доступ к аккаунту заблокирован на <b>30 минут</b>.
+									{else}Неизвестная ошибка
+									{/if}
+                                </div>
+								{/if}
+								
+								<div class="form-group mb-4">
+                                    <input type="text" name="a-login" class="form-control" id="loginFormInputLogin" />
+                                    <label for="loginFormInputEmail">Логин</label>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <input type="password" name="password" class="form-control invalid" id="loginFormInputPassword"  />
+                                    <label for="loginFormInputPassword">Пароль</label>
+                                </div>
+
+                                <div class="remember-forgot-password row no-gutters align-items-center justify-content-between pt-4">
+
+                                    <div class="form-check remember-me mb-4">
+                                        <label class="form-check-label">
+                                            <input type="checkbox" name="remember_me" class="form-check-input" aria-label="Remember Me" />
+                                            <span class="checkbox-icon"></span>
+                                            <span class="form-check-description">Запомнить меня</span>
+                                        </label>
+                                    </div>
+
+                                    <a href="{url module=PasswordRestoreAdmin}" class="forgot-password text-secondary mb-4">Забыли пароль?</a>
+                                </div>
+
+                                <input type="submit" class="submit-button btn btn-block btn-secondary my-4 mx-auto" aria-label="Войти" name="login" value="Войти">
+
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+
         </div>
-        <!-- /.col -->
-      </div>
-    </form>
-
-  </div>
-  <!-- /.login-box-body -->
-</div>
-<!-- /.login-box -->
-
-<!-- jQuery 2.2.3 -->
-<script src="./templates/js/jquery-2.2.3.min.js"></script>
-<!-- Bootstrap 3.3.6 -->
-<script src="./templates/js/bootstrap.min.js"></script>
+    </main>
+	
+	<!-- jQuery -->
+    <script type="text/javascript" src="./templates/js/jquery.min.js"></script>
+    <!-- Mobile Detect -->
+    <script type="text/javascript" src="./templates/js/plugins/mobile-detect/mobile-detect.min.js"></script>
+	<!-- Perfect Scrollbar -->
+    <script type="text/javascript" src="./templates/js/plugins/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
+    <!-- Bootstrap -->
+    <script type="text/javascript" src="./templates/js/plugins/bootstrap/bootstrap.min.js"></script>
+	<!-- Fuse Html -->
+    <script type="text/javascript" src="./templates/js/plugins/fuse-html/fuse-html.min.js"></script>
+    <!-- Main JS -->
+    <script type="text/javascript" src="./templates/js/main.js"></script>
+	{literal}
+	<script>
+		$(".submit-button").on("click", function(){
+			$(this).closest("form").submit();
+			.on('submit', function (e) {
+				var $form = $(this);
+			});
+		});
+	</script>
+	{/literal}
 </body>
+
 </html>
