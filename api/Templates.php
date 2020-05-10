@@ -19,11 +19,7 @@ class Templates extends Engine
 		$this->smarty->debugging = $this->config->smarty_debugging;
 		$this->smarty->error_reporting = E_ALL & ~E_NOTICE;
 
-		// Берем тему
-		$theme = $this->get_theme();
-		
-		if(empty($theme))
-			$theme = 'default';
+		$theme = 'default';
 
 		$this->smarty->compile_dir = $this->config->root_dir.'/templates/compiled/'.$theme;
 		$this->smarty->template_dir = $this->config->root_dir.'/templates/'.$theme.'/html';		
@@ -56,9 +52,7 @@ class Templates extends Engine
 	{
 		// Передаем в дизайн то, что может понадобиться в нем
 		$this->assign('config',		$this->config);
-		$settings = $this->settings;
-		$settings->theme = $this->get_theme();
-		$this->templates->assign('settings', $settings);
+		$this->templates->assign('settings', $this->settings);
 		return $this->smarty->fetch($template);
 	}
 	
@@ -93,7 +87,8 @@ class Templates extends Engine
  
 	public function get_theme(){
 		if(!isset($_COOKIE['theme']) || !is_dir($this->config->root_dir.'/templates/'.$_COOKIE['theme'].'/html')) {
-			$theme = $this->set_theme($this->settings->theme);
+			#$theme = $this->set_theme($this->settings->theme);
+			$theme = 'default';
 		}
 		else
 			$theme = $_COOKIE['theme'];

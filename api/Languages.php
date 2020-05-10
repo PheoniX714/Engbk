@@ -6,6 +6,7 @@ class Languages extends Engine
 
 	public function get_languages($filter = array())
 	{
+		$languages = array();
 		$visible_filter = '';
 		
 		if(isset($filter['visible']))
@@ -15,8 +16,8 @@ class Languages extends Engine
 		$query = "SELECT id, name, visible_name, code, position, visible, currency_id, main FROM __languages WHERE 1 $visible_filter ORDER BY position";
 		$this->db->query($query);
 		
-		$languages = $this->db->results();
-			
+		foreach($this->db->results() as $language)
+			$languages[$language->id] = $language;
 		return $languages;
 	}
 	

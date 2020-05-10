@@ -86,7 +86,7 @@ class IndexAdmin extends Engine
 			{
 				foreach($this->modules_permissions as $m=>$p)
 				{
-					if($this->managers->access($p))
+					if(in_array($p, $this->manager->permissions))
 					{
 						$module = $m;
 						break;
@@ -119,9 +119,15 @@ class IndexAdmin extends Engine
 		
 		$new_orders_counter = $this->orders->count_orders(array('status'=>0));
 		$this->templates->assign("new_orders_counter", $new_orders_counter);
+		
+		$menus = $this->pages->get_menus();
+		$this->templates->assign('menus', $menus);
+		
+		$languages = $this->languages->get_languages();
+		$this->templates->assign('languages', $languages);
 	
 		// Проверка прав доступа к модулю
-		if(isset($this->modules_permissions[get_class($this->module)]) && $this->managers->access($this->modules_permissions[get_class($this->module)]))
+		if(isset($this->modules_permissions[get_class($this->module)]) && in_array($this->modules_permissions[get_class($this->module)], $this->manager->permissions))
 		{
 			$content = $this->module->fetch();
 			$this->templates->assign("content", $content);
@@ -134,11 +140,7 @@ class IndexAdmin extends Engine
 		}else{
 			$this->templates->assign("content", "Permission denied");
 		}
-		
-		// Меню
-		$menus = $this->pages->get_menus();
-		$this->templates->assign('menus', $menus);
-		
+			
 		// Создаем текущую обертку сайта (обычно index.tpl)
 		$wrapper = $this->templates->smarty->getTemplateVars('wrapper');
 		if(is_null($wrapper))

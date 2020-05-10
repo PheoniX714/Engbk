@@ -35,16 +35,22 @@ class Pages extends Engine
 		
 		$pages = $this->db->results();
 		
-		if(isset($filter['language_id'])){
+		if(isset($filter['need_translate'])){
 			$languages = $this->languages->get_languages();
 			$languages_codes = array();
 			foreach($languages as $l)
 				$languages_codes[$l->code] = $l->id;
+			
+			$p_ids = array();
+			foreach($pages as $p)
+				$p_ids[] = $p->id;
+			
+			$pages_groups = $this->get_page_group($p_ids);
 							
 			if(count($languages) > 1){
 				foreach($pages as $p){
 					$existing_translations = array();
-					foreach($this->pages->get_page_group($p->id) as $pg)
+					foreach($pages_groups[$p->id] as $pg)
 						$existing_translations[] = $pg->language_id;
 					$need_translate = array_diff($languages_codes, $existing_translations);
 					$p->need_translate = array_flip($need_translate);
@@ -325,14 +331,14 @@ class Pages extends Engine
 	}	
 	public function get_page_group($id)
 	{
-		$where = $this->db->placehold(' WHERE page_id=?', intval($id));
+		$where = $this->db->placehold(' WHERE page_id in (?@)', (array)$id);
 		
 		$query = "SELECT page_id, language_id, name, url FROM __pages_translations $where ";
 
 		$this->db->query($query);
 		$cg = array();
 		foreach($this->db->results() as $c){
-			$cg[$c->language_id] = $c;
+			$cg[$c->page_id][$c->language_id] = $c;
 		}
 		return $cg;
 	}

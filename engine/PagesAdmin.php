@@ -8,7 +8,7 @@ class PagesAdmin extends Engine
 	{
 		$language = $this->languages->get_main_language();
 		$this->templates->assign('main_language', $language);
-		
+				
 		$menu_id = $this->request->get('menu_id', 'integer'); 
 		
 		if(empty($menu_id))
@@ -58,10 +58,7 @@ class PagesAdmin extends Engine
 			$filter_language = $language->id;
 		$this->templates->assign('filter_language', $filter_language);
 		
-		$pages = $this->pages->get_pages(array('menu_id'=>$menu->id, 'language_id'=>$filter_language, 'tree'=>true));
-		
-		$languages = $this->languages->get_languages();
-		$this->templates->assign('languages', $languages);
+		$pages = $this->pages->get_pages(array('menu_id'=>$menu->id, 'language_id'=>$filter_language, 'need_translate'=>true, 'tree'=>true));
 		
 		$this->templates->assign('pages', $pages);
 		return $this->templates->fetch('pages/pages.tpl');
