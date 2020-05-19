@@ -84,10 +84,11 @@ class View extends Engine
 				$page_url = array_pop(explode('/', $page_url));
 			
 			$translation = $this->pages->get_page_translation((string)$page_url, $_SESSION['lang']->id);
-			$page = $this->pages->get_page($translation->page_id);
-			$this->page = (object)array_merge((array)$page, (array)$translation);
-			$this->templates->assign('page', $this->page);
-			
+			if($translation->page_id){
+				$page = $this->pages->get_page($translation->page_id);
+				$this->page = (object)array_merge((array)$page, (array)$translation);
+				$this->templates->assign('page', $this->page);
+			}
 			// Страницы
 			$menu_pages = $this->pages->get_menu_pages(array('visible'=>1, 'language_id'=>$_SESSION['lang']->id));
 			$this->templates->assign('menu_pages', $menu_pages);

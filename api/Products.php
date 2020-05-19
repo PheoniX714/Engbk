@@ -143,16 +143,23 @@ class Products extends Engine
 		
 		$products = $this->db->results();
 		
-		if(isset($filter['need_translate'])){
+		if(isset($filter['check_translations'])){
 			$languages = $this->languages->get_languages();
 			$languages_codes = array();
 			foreach($languages as $l)
 				$languages_codes[$l->code] = $l->id;
+			
+			$p_ids = array();
+			foreach($products as $p)
+				$p_ids[] = $p->id;
+			
+			if(!empty($p_ids))
+				$products_groups = $this->get_product_group($p_ids);
 							
 			if(count($languages) > 1){
 				foreach($products as $p){
 					$existing_translations = array();
-					foreach($this->products->get_product_group($p->id) as $pg)
+					foreach($products_groups[$p->id] as $pg)
 						$existing_translations[] = $pg->language_id;
 					$need_translate = array_diff($languages_codes, $existing_translations);
 					$p->need_translate = array_flip($need_translate);
@@ -351,20 +358,24 @@ class Products extends Engine
 	
 	public function duplicate_product($id)
 	{
+		$language = $this->languages->get_main_language();
+		
     	$product = $this->get_product($id);
     	$product->id = null;
-		$product->name = $product->name.' (дубликат)';
     	$product->external_id = '';
     	$product->created = null;
-
 		// Сдвигаем товары вперед и вставляем копию на соседнюю позицию
     	$this->db->query('UPDATE __products SET position=position+1 WHERE position>?', $product->position);
     	$new_id = $this->products->add_product($product);
     	$this->db->query('UPDATE __products SET position=?, lang_group=? WHERE id=?', $product->position+1, $new_id, $new_id);
-    	
-    	// Генерируем новый url
-    	$this->db->query('UPDATE __products SET url=? WHERE id=?', $product->url."-".$new_id ,$new_id);
-    	
+		
+		$translation = $this->get_product_translation(intval($id), $language->id);
+		$translation->name = $translation->name.' (дубликат)';
+		$translation->url = $translation->url."-".$new_id;
+		$translation->product_id = $new_id;
+		$translation->language_id = $language->id;
+		$this->add_product_translation($translation);
+    	    	
 		// Дублируем категории
 		$categories = $this->categories->get_product_categories($id);
 		foreach($categories as $c)
@@ -601,16 +612,16 @@ class Products extends Engine
 	}	
 	public function get_product_group($id)
 	{
-		$where = $this->db->placehold(' WHERE product_id=?', intval($id));
+		$where = $this->db->placehold(' WHERE product_id in (?@)', (array)$id);
 		
 		$query = "SELECT product_id, language_id, name, url FROM __products_translations $where ";
 
 		$this->db->query($query);
-		$cg = array();
-		foreach($this->db->results() as $c){
-			$cg[$c->language_id] = $c;
+		$g = array();
+		foreach($this->db->results() as $r){
+			$g[$r->product_id][$r->language_id] = $r;
 		}
-		return $cg;
+		return $g;
 	}
 	
 }

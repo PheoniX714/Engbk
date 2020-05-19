@@ -1,19 +1,16 @@
 <?php
-
 require_once('Engine.php');
 
 class Categories extends Engine
 {
-	// Список указателей на категории в дереве категорий (ключ = id категории)
 	private $all_categories;
-	// Дерево категорий
 	private $categories_tree;
 
 	// Функция возвращает массив категорий
-	public function get_categories($filter = array(), $translate = true)
+	public function get_categories($filter = array())
 	{
 		if(!isset($this->categories_tree))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
  
 		if(!empty($filter['product_id']))
 		{
@@ -47,19 +44,19 @@ class Categories extends Engine
 	}	
 
 	// Функция возвращает дерево категорий
-	public function get_categories_tree($translate = true)
+	public function get_categories_tree($filter = array())
 	{
 		if(!isset($this->categories_tree))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
 			
 		return $this->categories_tree;
 	}
 
 	// Функция возвращает заданную категорию
-	public function get_category($id, $translate = true)
+	public function get_category($id, $filter = array())
 	{
 		if(!isset($this->all_categories))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
 		if(is_int($id) && array_key_exists(intval($id), $this->all_categories))
 			return $category = $this->all_categories[intval($id)];
 		elseif(is_string($id))
@@ -68,14 +65,7 @@ class Categories extends Engine
 					return $this->get_category((int)$category->id);
 		return false;
 	}
-	
-	public function get_category_admin($id) 
-	{
-		$query = $this->db->placehold("SELECT c.id, c.parent_id, c.image, c.preview_width, c.preview_height, c.visible, c.position FROM __categories c WHERE c.id=?", intval($id));		
-		$this->db->query($query);
-		return $this->db->result();
-	}
-	
+		
 	// Добавление категории
 	public function add_category($category)
 	{
@@ -151,7 +141,7 @@ class Categories extends Engine
 
 
 	// Инициализация категорий, после которой категории будем выбирать из локальной переменной
-	private function init_categories($translate = true)
+	private function init_categories($filter = array())
 	{
 		// Дерево категорий
 		$tree = new stdClass();
@@ -164,38 +154,43 @@ class Categories extends Engine
 		$pointers[0]->level = 0;
 		
 		// Выбираем все категории
-		$query = $this->db->placehold("SELECT c.id, c.parent_id, c.image, c.preview_width, c.preview_height, c.visible, c.position FROM __categories c ORDER BY c.parent_id, c.position");		
+		$query = $this->db->placehold("SELECT c.id, c.parent_id, c.visible, c.position FROM __categories c ORDER BY c.parent_id, c.position");		
 		$this->db->query($query);
 		$categories_data = $this->db->results();
-		
+			
 		//Мультиязычность
-		if($translate)
-			$language = $this->languages->get_language(intval($_SESSION['lang']->id));
-		else
-			$language = $this->languages->get_main_language();
 		$translations = array();
-		foreach($this->get_categories_translations($language->id) as $tr)
+		foreach($this->get_categories_translations(intval($filter['language_id'])) as $tr)
 			$translations[$tr->category_id] = $tr;
 		$categories = array();
 		foreach($categories_data as $c)
 			$categories[] = (object)array_merge((array)$c, (array)$translations[$c->id]);
 			
-		$languages = $this->languages->get_languages();
-		$languages_codes = array();
-		foreach($languages as $l)
-			$languages_codes[$l->code] = $l->id;
-						
-		if(count($languages) > 1){
-			foreach($categories as $c){
-				$existing_translations = array();
-				foreach($this->get_category_group($c->id) as $cg)
-					$existing_translations[] = $cg->language_id;
-				$need_translate = array_diff($languages_codes, $existing_translations);
-				$c->need_translate = array_flip($need_translate);
-			}
-		}else{
-			foreach($categories as $c){
-				$c->need_translate = '';
+		if(isset($filter['check_translations'])){
+			$languages = $this->languages->get_languages();
+			$languages_codes = array();
+			foreach($languages as $l)
+				$languages_codes[$l->code] = $l->id;
+			
+			$c_ids = array();
+			foreach($categories as $c)
+				$c_ids[] = $c->id;
+			
+			if(!empty($c_ids))
+				$categories_groups = $this->get_category_group($c_ids);
+							
+			if(count($languages) > 1){
+				foreach($categories as $c){
+					$existing_translations = array();
+					foreach($categories_groups[$c->id] as $cg)
+						$existing_translations[] = $cg->language_id;
+					$need_translate = array_diff($languages_codes, $existing_translations);
+					$c->need_translate = array_flip($need_translate);
+				}
+			}else{
+				foreach($categories as $c){
+					$c->need_translate = '';
+				}
 			}
 		}
 		
@@ -307,16 +302,13 @@ class Categories extends Engine
 	}	
 	public function get_category_group($id)
 	{
-		$where = $this->db->placehold(' WHERE category_id=?', intval($id));
-		
+		$where = $this->db->placehold(' WHERE category_id in (?@)', (array)$id);
 		$query = "SELECT category_id, language_id, name, url FROM __categories_translations $where ";
-
 		$this->db->query($query);
-		$cg = array();
-		foreach($this->db->results() as $c){
-			$c->full_url = '/catalog/'.$c->url;
-			$cg[$c->language_id] = $c;
+		$g = array();
+		foreach($this->db->results() as $r){
+			$g[$r->category_id][$r->language_id] = $r;
 		}
-		return $cg;
+		return $g;
 	}
 }

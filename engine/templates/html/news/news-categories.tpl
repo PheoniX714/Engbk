@@ -7,16 +7,25 @@
 {literal}
 <script>
 	$(function () {
-
-		if( window.screen.width >= 1024 ){
-			$(".todo-items").sortable({
-				items:".sort-item",
-				handle: ".handle",
-				tolerance:"pointer",
-				scrollSensitivity:40,
-				opacity:0.7, 
-				axis: "y",
-				update: function(event, ui){$(this).closest("form").submit();}
+		var categories_list = [].slice.call(document.querySelectorAll('.nested-sortable'));
+		// Loop through each nested sortable element
+		for (var i = 0; i < categories_list.length; i++) {
+			new Sortable(categories_list[i], {
+				group: {
+					name: 'nested',
+					put: false,
+					pull: false
+				},
+				fallbackOnBody: true,
+				swapThreshold: 0.65,
+				multiDrag: true,
+				selectedClass: 'bg-yellow-100',
+				handle: '.handle',
+				animation: 150,
+				ghostClass: 'bg-blue-100',
+				onEnd: function() {
+					$.ajax({url: document.location.href, type: "POST", dataType: "html", data: $('form').serialize()});
+				}
 			});
 		}
 	
@@ -120,10 +129,10 @@
 			</div>
 
 			<div id="todo" class="card">
-				{function name=categories_tree}
 				<div id="list" class="todo-items w-100">
+					{function name=categories_tree}
 					{if $level == 0}
-					<div class="todo-item pr-4 pl-4 pl-sm-11 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
+					<div class="todo-item pr-4 pl-11 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
 
 						<label id="check_all" class="custom-control custom-checkbox">
 							<input type="checkbox" class="custom-control-input" />
@@ -142,72 +151,73 @@
 					{/if}
 					
 					{if $categories}
-					{foreach $categories as $category}
-					<div class="sort-item">
-						<div class="todo-item pl-{$level*7 + 4} pr-2 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
+					<div class="nested-sortable">
+						{foreach $categories as $category}
+						<div class="sort-item">
+							<div class="todo-item pl-{$level*7} pr-2 py-4 row no-gutters flex-wrap flex-sm-nowrap align-items-center">
 
-							<div class="handle mr-1 px-2 m-none">
-								<i class="icon icon-drag-vertical"></i>
-							</div>
-							<input type="hidden" name="positions[{$category->id}]" value="{$category->position}">
+								<div class="handle mr-1 px-2">
+									<i class="icon icon-drag"></i>
+								</div>
+								<input type="hidden" name="positions[{$category->id}]" value="{$category->position}">
 
-							<label class="custom-control custom-checkbox">
-								<input type="checkbox" class="custom-control-input" name="check[]" value="{$category->id}" />
-								<span class="custom-control-indicator"></span>
-							</label>
+								<label class="custom-control custom-checkbox">
+									<input type="checkbox" class="custom-control-input" name="check[]" value="{$category->id}" />
+									<span class="custom-control-indicator"></span>
+								</label>
 
-							<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-left flex-column flex-sm-row">
+								<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-left flex-column flex-sm-row">
 
-								<div class="title mr-4">
-									<a class="td-wh-none {if !$category->name}text-red{/if}" href="{url module=NewsCategoryAdmin id=$category->id language_id=$filter_language return=null}">{if !$category->name}Отсутствует перевод{else}{$category->name|escape}{/if}</a>
+									<div class="title mr-4">
+										<a class="td-wh-none {if !$category->name}text-red{/if}" href="{url module=NewsCategoryAdmin id=$category->id language_id=$filter_language return=null}">{if !$category->name}Отсутствует перевод{else}{$category->name|escape}{/if}</a>
+									</div>
+
+									<div class="tags">
+										<div class="tag badge visible-tag" {if $category->visible}style="display:none;"{/if}>
+											<div class="row no-gutters align-items-center">
+												<div class="tag-color mr-2 bg-red"></div>
+												<div class="tag-label">Отключена</div>
+											</div>
+										</div>
+										{if $category->need_translate and $category->need_translate|count > 0}
+										<div class="tag badge language-tag">
+											<div class="row no-gutters align-items-center">
+												<div class="tag-color mr-2 bg-red"></div>
+												<div class="tag-label">Отсутствуют переводы: {foreach $category->need_translate as $nt}<b>{$nt|upper}</b> {/foreach}</div>
+											</div>
+										</div>
+										{/if}
+									</div>
 								</div>
 
-								<div class="tags">
-									<div class="tag badge visible-tag" {if $category->visible}style="display:none;"{/if}>
-										<div class="row no-gutters align-items-center">
-											<div class="tag-color mr-2 bg-red"></div>
-											<div class="tag-label">Отключена</div>
-										</div>
-									</div>
-									{if $category->need_translate and $category->need_translate|count > 0}
-									<div class="tag badge language-tag">
-										<div class="row no-gutters align-items-center">
-											<div class="tag-color mr-2 bg-red"></div>
-											<div class="tag-label">Отсутствуют переводы: {foreach $category->need_translate as $nt}<b>{$nt|upper}</b> {/foreach}</div>
-										</div>
-									</div>
-									{/if}
+								<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
+
+									<a href="{url module=NewsCategoryAdmin id=$category->id language_id=$filter_language return=null}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
+										<i class="icon icon-pencil text-blue"></i>
+									</a>
+									
+									<button type="button" class="btn btn-icon visible" data-toggle="tooltip" data-placement="bottom" title="Вкл\Выкл категорию">
+										<i class="icon icon-lightbulb {if $category->visible}text-yellow-900 enbl{/if}"></i>
+									</button>
+									
+									<a href="../news/{$category->url}" class="btn btn-icon" target="__blank" data-toggle="tooltip" data-placement="bottom" title="Открыть в новом окне">
+										<i class="icon icon-open-in-new text-blue"></i>
+									</a>
+									
+									<button type="button" class="btn btn-icon delete" data-toggle="tooltip" data-placement="bottom" title="Удалить">
+										<i class="icon icon-trash text-red"></i>
+									</button>
+									
 								</div>
 							</div>
-
-							<div class="buttons col-12 col-sm-auto d-flex align-items-center justify-content-end">
-
-								<a href="{url module=NewsCategoryAdmin id=$category->id language_id=$filter_language return=null}" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Редактировать">
-									<i class="icon icon-pencil text-blue"></i>
-								</a>
-								
-								<button type="button" class="btn btn-icon visible" data-toggle="tooltip" data-placement="bottom" title="Вкл\Выкл категорию">
-									<i class="icon icon-lightbulb {if $category->visible}text-yellow-900 enbl{/if}"></i>
-								</button>
-								
-								<a href="../news/{$category->url}" class="btn btn-icon" target="__blank" data-toggle="tooltip" data-placement="bottom" title="Открыть в новом окне">
-									<i class="icon icon-open-in-new text-blue"></i>
-								</a>
-								
-								<button type="button" class="btn btn-icon" data-toggle="tooltip" data-placement="bottom" title="Удалить">
-									<i class="icon icon-trash text-red"></i>
-								</button>
-								
-							</div>
+							{categories_tree categories=$category->subcategories level=$level+1}
 						</div>
-						{categories_tree categories=$category->subcategories level=$level+1}
+						{/foreach}
 					</div>
-					{/foreach}
 					{/if}
+					{/function}
+					{categories_tree categories=$categories level=0}
 				</div>
-				{/function}
-					
-				{categories_tree categories=$categories level=0}
 
 				<div class="card-footer py-6">
 					<div class="row">

@@ -8,12 +8,11 @@ class CategoriesAdmin extends Engine
 		$language = $this->languages->get_main_language();
 		$this->templates->assign('main_language', $language);
 		
-		$filter_language = 1;
-		
+		$filter = array();
 		if($this->request->method('post'))
 		{
-			$filter_language = $this->request->post('filter_language');
-						
+			$filter['language_id'] = $this->request->post('filter_language', 'integer');
+
 			// Действия с выбранными
 			$ids = $this->request->post('check');
 			if(is_array($ids))
@@ -44,17 +43,14 @@ class CategoriesAdmin extends Engine
 			sort($positions);
 			foreach($positions as $i=>$position)
 				$this->categories->update_category($ids[$i], array('position'=>$position)); 
-
 		} 
-		if(empty($filter_language))
-			$filter_language = $language->id;
-		$this->templates->assign('filter_language', $filter_language);
-  
-		$categories = $this->categories->get_categories_tree(false);
-				
-		$languages = $this->languages->get_languages();
-		$this->templates->assign('languages', $languages);
-
+		if(empty($filter['language_id']))
+			$filter['language_id'] = $language->id;
+		$this->templates->assign('filter_language', $filter['language_id']);
+		
+		$filter['check_translations'] = true;
+		$categories = $this->categories->get_categories_tree($filter);
+		
 		$this->templates->assign('categories', $categories);
 		return $this->templates->fetch('products/categories.tpl');
 	}

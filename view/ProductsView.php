@@ -27,7 +27,7 @@ class ProductsView extends View
 		 */
 		// GET-Параметры
 		$category_url = $this->request->get('category', 'string');
-		$brand_url    = $this->request->get('brand', 'string');
+		$brand_url    = $this->request->get('brand', 'string'); 
 		$price_range = $this->request->get('price_range', 'string');
 		$price_max = $this->request->get('price_max', 'string');
 		

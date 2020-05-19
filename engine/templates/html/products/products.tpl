@@ -241,7 +241,7 @@
 							<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-start flex-column">
 
 								<div class="title mr-4 mb-2">
-									<a class="td-wh-none" style="word-break: break-all;" href="{url module=ProductAdmin id=$product->id return=$smarty.server.REQUEST_URI}">{$product->name|escape}</a>
+									<a class="td-wh-none {if !$product->name}text-red{/if}" style="word-break: break-all;" href="{url module=ProductAdmin id=$product->id return=$smarty.server.REQUEST_URI}">{if !$product->name}Отсутствует перевод{else}{$product->name|escape}{/if}</a>
 								</div>
 
 								<div class="tags">

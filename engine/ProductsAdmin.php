@@ -12,14 +12,14 @@ class ProductsAdmin extends Engine
 		$language = $this->languages->get_main_language();
 
 		$filter = array();
-		$filter['need_translate'] = true;
+		$filter['check_translations'] = true;
 		$filter['page'] = max(1, $this->request->get('page', 'integer'));
 			
 		/* $filter['limit'] = $this->settings->products_num_admin; */
 		$filter['limit'] = 30;
 	
 		// Категории
-		$categories = $this->categories->get_categories_tree();
+		$categories = $this->categories->get_categories_tree(array(), $translate);
 		$this->templates->assign('categories', $categories);
 		
 		// Текущая категория

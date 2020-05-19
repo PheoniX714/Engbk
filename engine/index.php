@@ -43,21 +43,20 @@ print $backend->fetch();
 
 // Отладочная информация
 if($backend->config->debug)
-{
-	print "<!--\r\n";
-	$sql_time = 0;
-	foreach($_SESSION['debag'] as $q)
-		$sql_time += $q['time'];
-  
+{		
+	$debug = array();	
 	$time_end = microtime(true);
 	$exec_time = $time_end-$time_start;
   	if(function_exists('memory_get_peak_usage'))
-		print "memory peak usage: ".memory_get_peak_usage()." bytes\r\n";  
-	print "page generation time: ".$exec_time." seconds\r\n";  
-	print "sql queries time: ".$sql_time." seconds\r\n";  
-	print "sql queries count: ".count($_SESSION['debag'])."\r\n";  
-	print "php run time: ".($exec_time-$sql_time)." seconds\r\n";  
-	print_r($_SESSION['debag']);
-	print "-->";
+		$debug['memory_get_peak_usage'] = memory_get_peak_usage();  
+	$debug['page_generation_time'] = $exec_time;
+	$debug['module'] = $_SERVER['QUERY_STRING'];
+	$debug['sql_debag'] = $_SESSION['debag'];
+		
+	$filename = 'debug_log.txt';
+	$data = json_encode($debug);
+	$f = fopen($filename, 'w');
+	fwrite($f, $data);
+	fclose($f);
 	unset($_SESSION['debag']);
 }

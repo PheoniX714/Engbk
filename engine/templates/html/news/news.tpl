@@ -135,7 +135,7 @@
 
 						<div class="info col px-4 d-flex align-items-start align-sm-items-center justify-content-left flex-column flex-sm-row">
 							<div class="title mr-4">
-								<a class="td-wh-none" href="{url module=PostAdmin id=$p->id lang_group=null language_id=$filter_language lang_id=null return=null}">{$p->name|escape}</a>
+								<a class="td-wh-none {if !$p->name}text-red{/if}" href="{url module=PostAdmin id=$p->id lang_group=null language_id=$filter_language lang_id=null return=null}">{if !$p->name}Отсутствует перевод{else}{$p->name|escape}{/if}</a>
 							</div>
 							
 							<div class="tags">

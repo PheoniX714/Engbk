@@ -43,24 +43,24 @@ else
 	print $view->fetch();
 }
 
+
 // Отладочная информация
-if(0)
-{
-	print "<!--\r\n";
+if($view->config->debug == 2)
+{		
+	$debug = array();	
 	$time_end = microtime(true);
 	$exec_time = $time_end-$time_start;
-	
-	$file = 'stat_7.txt';
-	// Открываем файл для получения существующего содержимого
-	$current = file_get_contents($file);
-	// Добавляем нового человека в файл
-	$current .= $exec_time."\n";
-	// Пишем содержимое обратно в файл
-	file_put_contents($file, $current);
-  
   	if(function_exists('memory_get_peak_usage'))
-		print "memory peak usage: ".memory_get_peak_usage()." bytes\r\n";  
-	print "page generation time: ".$exec_time." seconds\r\n";  
-	print "-->";
-	
+		$debug['memory_get_peak_usage'] = memory_get_peak_usage();  
+	$debug['page_generation_time'] = $exec_time;
+	$debug['module'] = $_SERVER['QUERY_STRING'];
+	$debug['sql_debag'] = $_SESSION['debag'];
+		
+	$filename = 'debug_log.txt';
+	$data = json_encode($debug);
+	$f = fopen($filename, 'w');
+	fwrite($f, $data);
+	fclose($f);
+	unset($_SESSION['debag']);
 }
+

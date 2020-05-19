@@ -35,7 +35,7 @@ class Pages extends Engine
 		
 		$pages = $this->db->results();
 		
-		if(isset($filter['need_translate'])){
+		if(isset($filter['check_translations'])){
 			$languages = $this->languages->get_languages();
 			$languages_codes = array();
 			foreach($languages as $l)
@@ -45,7 +45,8 @@ class Pages extends Engine
 			foreach($pages as $p)
 				$p_ids[] = $p->id;
 			
-			$pages_groups = $this->get_page_group($p_ids);
+			if(!empty($p_ids))
+				$pages_groups = $this->get_page_group($p_ids);
 							
 			if(count($languages) > 1){
 				foreach($pages as $p){
@@ -62,7 +63,7 @@ class Pages extends Engine
 			}
 		}
 		
-		if(isset($filter['tree'])){
+		if(isset($filter['tree_view'])){
 			$tree = new stdClass();
 			$tree->subcategories = array();
 			
@@ -336,11 +337,11 @@ class Pages extends Engine
 		$query = "SELECT page_id, language_id, name, url FROM __pages_translations $where ";
 
 		$this->db->query($query);
-		$cg = array();
-		foreach($this->db->results() as $c){
-			$cg[$c->page_id][$c->language_id] = $c;
+		$g = array();
+		foreach($this->db->results() as $r){
+			$g[$r->page_id][$r->language_id] = $r;
 		}
-		return $cg;
+		return $g;
 	}
 	
 	

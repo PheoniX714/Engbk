@@ -54,17 +54,23 @@ class News extends Engine
 		$this->db->query($query);
 		$news = $this->db->results();
 		
-		if(isset($filter['language_id'])){
+		if(isset($filter['check_translations'])){
 			$languages = $this->languages->get_languages();
 			$languages_codes = array();
 			foreach($languages as $l)
 				$languages_codes[$l->code] = $l->id;
+			
+			$n_ids = array();
+			foreach($news as $n)
+				$n_ids[] = $n->id;
+			
+			$news_groups = $this->get_post_group($n_ids);
 							
 			if(count($languages) > 1){
 				foreach($news as $n){
 					$existing_translations = array();
-					foreach($this->news->get_post_group($n->id) as $pg)
-						$existing_translations[] = $pg->language_id;
+					foreach($news_groups[$n->id] as $ng)
+						$existing_translations[] = $ng->language_id;
 					$need_translate = array_diff($languages_codes, $existing_translations);
 					$n->need_translate = array_flip($need_translate);
 				}
@@ -236,14 +242,14 @@ class News extends Engine
 	}	
 	public function get_post_group($id)
 	{
-		$where = $this->db->placehold(' WHERE post_id=?', intval($id));
+		$where = $this->db->placehold(' WHERE post_id in (?@)', (array)$id);
 		
 		$query = "SELECT post_id, language_id, name, url FROM __news_translations $where ";
 
 		$this->db->query($query);
 		$cg = array();
 		foreach($this->db->results() as $c){
-			$cg[$c->language_id] = $c;
+			$cg[$c->post_id][$c->language_id] = $c;
 		}
 		return $cg;
 	}	
@@ -253,26 +259,26 @@ class News extends Engine
 	private $all_categories;
 	private $categories_tree;
 
-	public function get_categories($filter = array(), $translate = true)
+	public function get_categories($filter = array())
 	{
 		if(!isset($this->categories_tree))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
 		
 		return $this->all_categories;
 	}
 	
-	public function get_categories_tree($translate = true)
+	public function get_categories_tree($filter = array())
 	{
 		if(!isset($this->categories_tree))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
 			
 		return $this->categories_tree;
 	}
 
-	public function get_category($id, $translate = true)
+	public function get_category($id, $filter = array())
 	{
 		if(!isset($this->all_categories))
-			$this->init_categories($translate);
+			$this->init_categories($filter);
 		if(is_int($id) && array_key_exists(intval($id), $this->all_categories))
 			return $category = $this->all_categories[intval($id)];
 		elseif(is_string($id))
@@ -325,7 +331,7 @@ class News extends Engine
 	}
 	
 	// Инициализация категорий, после которой категории будем выбирать из локальной переменной
-	private function init_categories($translate = true)
+	private function init_categories($filter = array())
 	{
 		// Дерево категорий
 		$tree = new stdClass();
@@ -343,33 +349,38 @@ class News extends Engine
 		$categories_data = $this->db->results();
 		
 		//Мультиязычность
-		if($translate)
-			$language = $this->languages->get_language(intval($_SESSION['lang']->id));
-		else
-			$language = $this->languages->get_main_language();
 		$translations = array();
-		foreach($this->get_categories_translations($language->id) as $tr)
+		foreach($this->get_categories_translations(intval($filter['language_id'])) as $tr)
 			$translations[$tr->category_id] = $tr;
 		$categories = array();
 		foreach($categories_data as $c)
 			$categories[] = (object)array_merge((array)$c, (array)$translations[$c->id]);
 			
-		$languages = $this->languages->get_languages();
-		$languages_codes = array();
-		foreach($languages as $l)
-			$languages_codes[$l->code] = $l->id;
-						
-		if(count($languages) > 1){
-			foreach($categories as $c){
-				$existing_translations = array();
-				foreach($this->get_category_group($c->id) as $cg)
-					$existing_translations[] = $cg->language_id;
-				$need_translate = array_diff($languages_codes, $existing_translations);
-				$c->need_translate = array_flip($need_translate);
-			}
-		}else{
-			foreach($categories as $c){
-				$c->need_translate = '';
+		if(isset($filter['check_translations'])){
+			$languages = $this->languages->get_languages();
+			$languages_codes = array();
+			foreach($languages as $l)
+				$languages_codes[$l->code] = $l->id;
+			
+			$c_ids = array();
+			foreach($categories as $c)
+				$c_ids[] = $c->id;
+			
+			if(!empty($c_ids))
+				$categories_groups = $this->get_category_group($c_ids);
+							
+			if(count($languages) > 1){
+				foreach($categories as $c){
+					$existing_translations = array();
+					foreach($categories_groups[$c->id] as $cg)
+						$existing_translations[] = $cg->language_id;
+					$need_translate = array_diff($languages_codes, $existing_translations);
+					$c->need_translate = array_flip($need_translate);
+				}
+			}else{
+				foreach($categories as $c){
+					$c->need_translate = '';
+				}
 			}
 		}
 		
@@ -419,7 +430,7 @@ class News extends Engine
 		unset($ids);
 
 		$this->categories_tree = $tree->subcategories;
-		$this->all_categories = $pointers;	
+		$this->all_categories = $pointers;
 	}
 		
 	
@@ -477,16 +488,13 @@ class News extends Engine
 	}	
 	public function get_category_group($id)
 	{
-		$where = $this->db->placehold(' WHERE category_id=?', intval($id));
-		
+		$where = $this->db->placehold(' WHERE category_id in (?@)', (array)$id);
 		$query = "SELECT category_id, language_id, name, url FROM __news_categories_translations $where ";
-
 		$this->db->query($query);
-		$cg = array();
-		foreach($this->db->results() as $c){
-			$c->full_url = '/news/'.$c->url;
-			$cg[$c->language_id] = $c;
+		$g = array();
+		foreach($this->db->results() as $r){
+			$g[$r->category_id][$r->language_id] = $r;
 		}
-		return $cg;
+		return $g;
 	}
 }

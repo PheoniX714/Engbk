@@ -70,9 +70,16 @@
                 <div class="content">
 					{$content}
                 </div>
+				{if $config->debug}
+				<nav id="footer" class="bg-dark text-auto row no-gutters align-items-center px-6">
+					<a class="btn btn-danger text-capitalize" href="debug.php" target="_blank">
+						<i class="icon icon-bug mr-2 s-4"></i> Debug
+					</a>
+				</nav>
+				{/if}
             </div>
-        </div>
+        </div>		
     </main>
+	{$smarty.capture.js}
 </body>
-{$smarty.capture.js}
 </html>

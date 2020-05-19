@@ -115,12 +115,10 @@ class CategoryAdmin extends Engine
 			$category->parent_id = $this->request->get('parent_id', 'integer');
 		}		
 		
-		$languages = $this->languages->get_languages();
-		$categories = $this->categories->get_categories_tree();
+		$categories = $this->categories->get_categories_tree(array('language_id' => $main_language->id));
 				
 		$this->templates->assign('language', $language);
 		$this->templates->assign('main_language', $main_language);
-		$this->templates->assign('languages', $languages);
 		$this->templates->assign('category', $category);
 		$this->templates->assign('categories', $categories);
 		return  $this->templates->fetch('products/category.tpl');

@@ -46,6 +46,7 @@ class NewsAdmin extends Engine
 		$filter = array();
 		$filter['page'] = max(1, $this->request->get('page', 'integer')); 		
 		$filter['limit'] = 20;
+		$filter['check_translations'] = true;
 		
 		$filter['language_id'] = $filter_language;
   	

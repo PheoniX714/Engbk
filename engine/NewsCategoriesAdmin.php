@@ -1,5 +1,4 @@
 <?php
- 
 require_once('api/Engine.php');
 
 class NewsCategoriesAdmin extends Engine
@@ -9,12 +8,11 @@ class NewsCategoriesAdmin extends Engine
 		$language = $this->languages->get_main_language();
 		$this->templates->assign('main_language', $language);
 		
-		$filter_language = 1;
-		
+		$filter = array();
 		if($this->request->method('post'))
 		{
-			$filter_language = $this->request->post('filter_language');
-						
+			$filter['language_id'] = $this->request->post('filter_language', 'integer');
+			
 			// Действия с выбранными
 			$ids = $this->request->post('check');
 			if(is_array($ids))
@@ -44,17 +42,14 @@ class NewsCategoriesAdmin extends Engine
 	 		$ids = array_keys($positions);
 			sort($positions);
 			foreach($positions as $i=>$position)
-				$this->news->update_category($ids[$i], array('position'=>$position)); 
-
-		} 
-		if(empty($filter_language))
-			$filter_language = $language->id;
-		$this->templates->assign('filter_language', $filter_language);
-  
-		$categories = $this->news->get_categories_tree(false);
-				
-		$languages = $this->languages->get_languages();
-		$this->templates->assign('languages', $languages);
+				$this->news->update_category($ids[$i], array('position'=>$position));
+		}
+		if(empty($filter['language_id']))
+			$filter['language_id'] = $language->id;
+		$this->templates->assign('filter_language', $filter['language_id']);
+		
+		$filter['check_translations'] = true;
+		$categories = $this->news->get_categories_tree($filter);
 
 		$this->templates->assign('categories', $categories);
 		return $this->templates->fetch('news/news-categories.tpl');

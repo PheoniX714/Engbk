@@ -3,22 +3,35 @@ require_once('Engine.php');
 
 class Languages extends Engine
 {
-
+	private $languages_list;
+	
 	public function get_languages($filter = array())
 	{
-		$languages = array();
-		$visible_filter = '';
+		if(!isset($this->languages_list)){	
+			$languages = array();
+			$visible_filter = '';
+			
+			if(isset($filter['visible']))
+				$visible_filter = $this->db->placehold('AND visible = ?', intval($filter['visible']));
+			
+			// Выбираем из базы языки
+			$query = "SELECT id, name, visible_name, code, position, visible, currency_id, main FROM __languages WHERE 1 $visible_filter ORDER BY position";
+			$this->db->query($query);
+			
+			foreach($this->db->results() as $language) 
+				$languages[$language->code] = $language;
+			$this->languages_list = $languages;
+		}
 		
-		if(isset($filter['visible']))
-			$visible_filter = $this->db->placehold('AND visible = ?', intval($filter['visible']));
-		
-		// Выбираем из базы языки
-		$query = "SELECT id, name, visible_name, code, position, visible, currency_id, main FROM __languages WHERE 1 $visible_filter ORDER BY position";
-		$this->db->query($query);
-		
-		foreach($this->db->results() as $language)
-			$languages[$language->id] = $language;
-		return $languages;
+		if($filter['visible']){
+			$languages = array();
+			foreach($this->languages_list as $l)
+				if($l->visible)
+					$languages[$l->code] = $l;
+			return $languages;
+		}
+		else
+			return $this->languages_list;
 	}
 	
 	public function get_language($id)
@@ -38,11 +51,14 @@ class Languages extends Engine
 	
 	public function get_main_language()
 	{
-		$query = $this->db->placehold('SELECT id, name, visible_name, code, position, visible, currency_id, main FROM __languages WHERE main=1 LIMIT 1');
-		if(!$this->db->query($query))
-			return false;
+		if(!isset($this->languages_list))
+			$this->get_languages();
 		
-		return $this->db->result();
+		foreach($this->languages_list as $l)
+			if($l->main)
+				return $l;	
+		
+		return false;
 	}
 	
 	public function add_language($language)
@@ -64,6 +80,7 @@ class Languages extends Engine
 		if(!$this->db->query($query))
 			return false;
 		
+		unset($this->languages_list);
 		return $id;
 	}
 	public function set_main_language($id, $value)
@@ -81,7 +98,7 @@ class Languages extends Engine
 		$query = $this->db->placehold('UPDATE __languages SET main = NULL WHERE 1');
 		if(!$this->db->query($query))
 			return false;
-		
+		unset($this->languages_list);
 		return true;
 	}
 	
@@ -94,6 +111,7 @@ class Languages extends Engine
 			$query = $this->db->placehold("DELETE FROM __languages WHERE id=? LIMIT 1", intval($id));
 			$this->db->query($query);
 		}
+		unset($this->languages_list);
 	}	
 	
 	################### Языковые константы ######################

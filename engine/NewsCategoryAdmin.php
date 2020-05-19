@@ -5,6 +5,8 @@ class NewsCategoryAdmin extends Engine
 {
 	public function fetch()
 	{
+		$category = new stdClass;
+		$translation = new stdClass;
 		$language_id = $this->request->get('language_id', 'integer');
 		
 		if(empty($language_id))
@@ -71,25 +73,23 @@ class NewsCategoryAdmin extends Engine
 		}
 		else
 		{
-			if(!empty($id = $this->request->get('id', 'integer'))){
-				$category = $this->news->get_category($id);
-				$translation = $this->news->get_category_translation(intval($category->id), intval($language->id));
-				
-				$category = (object)array_merge((array)$category, (array)$translation);
-			}
+			$category->id = $this->request->get('id', 'integer');
+			
+			$category = $this->news->get_category($category->id);
+			$translation = $this->news->get_category_translation(intval($category->id), intval($language->id));
+			
+			$category = (object)array_merge((array)$category, (array)$translation);
 		}
 		
-		if(empty($category)){			
+		if(empty($category->id)){			
 			$category = new stdClass;
 			$category->visible = 1;
 		}		
 		
-		$languages = $this->languages->get_languages();
-		$categories = $this->news->get_categories_tree();
+		$categories = $this->news->get_categories_tree(array('language_id' => $main_language->id));
 		
 		$this->templates->assign('language', $language);
 		$this->templates->assign('main_language', $main_language);
-		$this->templates->assign('languages', $languages);
 		$this->templates->assign('category', $category);
 		$this->templates->assign('categories', $categories);
  	  	return $this->templates->fetch('news/news-category.tpl');
